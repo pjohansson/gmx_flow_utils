@@ -140,14 +140,17 @@ def backup_file(path, log=sys.stderr):
 
     """
 
-    def get_next(base, i):
-        return "#{}.{}#".format(base, i)
+    def get_next(path, i):
+        dirname = os.path.dirname(path)
+        base = os.path.basename(path)
 
-    if os.path.exists(path):
+        return os.path.join(dirname, "#{}.{}#".format(base, i))
+
+    if os.path.lexists(path):
         i = 1
         to_path = get_next(path, i)
 
-        while os.path.exists(to_path):
+        while os.path.lexists(to_path):
             i += 1
             to_path = get_next(path, i)
 
