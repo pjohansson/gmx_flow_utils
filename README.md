@@ -59,7 +59,7 @@ assert (data['X'][164:328] == 0.375).all() # second column
 ### Writing data
 
 ```python
-from gmx_flow import write_data
+from gmx_flow import read_data, write_data
 
 data, info = read_data('include/flow_00001.dat')
 
