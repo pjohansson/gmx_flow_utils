@@ -81,9 +81,11 @@ the `gmx_flow` module.
 
 Script for averaging flow fields. See its help for more information:
 
-```bash
-average_flow_fields.py -h
-```
+### `convert_gmx_flow_1_to_2.py`
+
+Script for converting the flow field map format from version `GMX_FLOW_1`
+to `GMX_FLOW_2`. The latter contains the bin mass density instead of the 
+total bin mass from the simulations, a full on improvement.
 
 
 ## Todo
