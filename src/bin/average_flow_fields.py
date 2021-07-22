@@ -3,6 +3,8 @@
 import os
 from argparse import ArgumentParser
 from gmx_flow import read_data, write_data, average_data
+from gmx_flow.utils import backup_file
+
 
 def get_files_from_range(args):
     """Yield files from a range along with the output destination."""
@@ -45,24 +47,6 @@ def get_files_from_list(args):
     """Yield the list of given files and the output."""
 
     yield args.files, args.output
-
-
-def backup_file_if_existing(path):
-    """Backup a file that exists at the given path using the Gromacs standard."""
-
-    def get_next(base, i):
-        return "#{}.{}#".format(base, i)
-
-    if os.path.exists(path):
-        i = 1
-        to_path = get_next(path, i)
-
-        while os.path.exists(to_path):
-            i += 1
-            to_path = get_next(path, i)
-
-        print("backed up '{}' to '{}'".format(path, to_path))
-        os.rename(path, to_path)
 
 
 def print_file_info(files, fnout, verbosity_level):
@@ -167,5 +151,5 @@ if __name__ == '__main__':
 
             avg_data = average_data(data_list)
 
-            backup_file_if_existing(fnout)
+            backup_file(fnout)
             write_data(fnout, avg_data, info)
