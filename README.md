@@ -1,18 +1,35 @@
 # Gromacs Flow Field Utilities
 
-A collection of modules and scripts for working with flow field 
+A collection of Python modules and scripts for working with flow field 
 datafiles written a Gromacs fork for flow field collection 
 (https://github.com/pjohansson/gromacs-flow-field).
 
-## `gmx_flow.py`
 
-Functions for reading and writing data. Its public functions are documented.
+## Installation
 
-The Python scripts require access to this module.
+Clone or download the directory and install with `pip`. Note that this 
+is a Python 3 package. 
 
-### Examples
+```bash
+git clone https://github.com/pjohansson/gmx_flow_utils.git
+cd gmx_flow_utils/
 
-Reading data (example files in `include` directory):
+# Install dependencies
+pip install -r requirements.txt
+
+# Install package
+pip install . 
+```
+
+
+## Examples
+
+The main module of the package is `gmx_flow` which containts functions
+for reading and writing flow field data.
+
+### Reading data 
+
+Example files are in the `include` directory.
 
 ```python
 from gmx_flow import read_data
@@ -39,7 +56,7 @@ assert (data['X'][164:328] == 0.375).all() # second column
                                            # etc.
 ```
 
-Writing data:
+### Writing data
 
 ```python
 from gmx_flow import write_data
@@ -54,16 +71,26 @@ data['U'] *= 0.5
 write_data('out_00001.dat', data, info)
 ```
 
-## `average_flow_fields.py`
+
+## Scripts
+
+The package comes with some scripts which will be installed alongside
+the `gmx_flow` module.
+
+### `average_flow_fields.py`
 
 Script for averaging flow fields. See its help for more information:
 
-`$ python3 average_flow_fields.py -h`
+```bash
+average_flow_fields.py -h
+```
+
 
 ## Todo
 
 Create a proper class for flow fields, instead of exposing separate 
 data and info dicts.
+
 
 ## License
 
