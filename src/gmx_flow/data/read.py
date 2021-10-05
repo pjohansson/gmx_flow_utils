@@ -39,7 +39,7 @@ def read_data(filename):
     y = y0 + dy * (np.arange(ny) + 0.5)
     xs, ys = np.meshgrid(x, y, indexing='ij')
 
-    grid = np.zeros((nx, ny), dtype=[(l, np.float) for l in _FIELDS])
+    grid = np.zeros((nx, ny), dtype=[(l, float) for l in _FIELDS])
     grid['X'] = xs
     grid['Y'] = ys
 
