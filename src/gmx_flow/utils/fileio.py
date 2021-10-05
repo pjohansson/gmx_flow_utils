@@ -4,13 +4,19 @@ import os
 import sys
 
 def get_files_from_range(
-    fnbase, 
+    *fnbase, 
     output_base=None, num_per_output=None, 
-    begin=1, end=None, ext='dat'):
-    """Yield paths to existing files with a given base path.
+    begin=1, end=None, ext='dat',
+    no_check=False):
+    """Yield paths to existing files with given base paths.
 
     Filenames are constructed using the format `{base}{:05d}.{ext}`,
     i.e. `flow_00001.dat`, `flow_00002.dat`, ... 
+
+    Several bases can be supplied, in which case the filenames 
+    for all bases are verified to exist and returned as a list. 
+    The generation stops as soon as any generated path does not 
+    exist.
 
     Unless specific beginning and end points are specified, the function 
     yields all filenames with the given base and numbering starting from
@@ -29,7 +35,7 @@ def get_files_from_range(
 
     # Arguments
 
-    fnbase (str): Given filename base to find and yield files for.
+    fnbase (strs): Given filename base(s) to find and yield files for.
 
     output_base (str): Given filename base to yield output files for.
 
@@ -41,13 +47,20 @@ def get_files_from_range(
 
     ext (str): Extension to yield files for.
 
+    no_check (bool): Set to `True` to only create file names, not check for existance.
+
 
     # Yields
 
-    fn (str):             input files 
+    fn (str):             input files if only a single base was given
+    fns ([str]):          input files for each base if multiple bases were given
     fn, fnout (str, str): input and output files if `output_base` != `None`
     fns, fnout ([str], str): list of input files for a single output file
                              if `output_base` and `num_per_output` != `None`
+    [fns1, fns2, ...], fnout ([[str]], str): 
+                          yielding multiple files for multiple bases, along with
+                          an output file. fns1 is the files for base1, fns2 for 
+                          base2, etc.
 
     # Examples
 
@@ -98,37 +111,73 @@ def get_files_from_range(
                           # ...
     ```
 
+    Read files using two input bases:
+
+    ```
+    for fn1, fn2 in get_files_from_range('one_', 'two_'):
+        print(fn1, fn2) # `one_00001.dat`, `two_00001.dat`
+                        # `one_00002.dat`, `two_00002.dat`
+                        # ...
+    ```
+
     """
+
+    def all_files_exist(filenames):
+        if no_check:
+            return True
+        else:
+            return all([os.path.exists(fn) for fn in filenames])
 
     def get_filename(base, i):
         return "{}{:05d}.{}".format(base, i, ext)
 
+    def get_yielded_single_or_list(filenames):
+        if len(filenames) == 1:
+            return filenames[0]
+        else:
+            return filenames
+
+    def transpose_if_multiple_bases(groups, num_bases):
+        if num_bases == 1:
+            return groups
+        else:
+            transposed_groups = [[] for _ in range(num_bases)]
+
+            for fns in groups:
+                for i, fn in enumerate(fns):
+                    transposed_groups[i].append(fn)
+
+            return transposed_groups
+
     i = begin
     index_output = 1
 
-    fn = get_filename(fnbase, i)
+    if num_per_output == None:
+        num_per_output = 1
+
+    fns = [get_filename(base, i) for base in fnbase]
     filename_group = []
 
-    while os.path.exists(fn) and (end == None or i <= end):
-        if num_per_output == None:
+    while (all_files_exist(fns) and (end == None or i <= end)):
+        if num_per_output < 2:
             if output_base == None:
-                yield fn
+                yield get_yielded_single_or_list(fns)
             else:
                 fnout = get_filename(output_base, i)
-                yield fn, fnout
+                yield get_yielded_single_or_list(fns), fnout
         
         else:
-            filename_group.append(fn)
+            filename_group.append(get_yielded_single_or_list(fns))
 
             if len(filename_group) == num_per_output:
                 fnout = get_filename(output_base, index_output)
-                yield filename_group, fnout
+                yield transpose_if_multiple_bases(filename_group, len(fnbase)), fnout
 
                 filename_group = []
                 index_output += 1
 
         i += 1
-        fn = get_filename(fnbase, i)
+        fns = [get_filename(base, i) for base in fnbase]
 
 
 def backup_file(path, log=sys.stderr):
