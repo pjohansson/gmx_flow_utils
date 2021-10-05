@@ -93,6 +93,22 @@ def test_yield_existing_files_along_with_paths_for_output(tmpdir):
     assert fnout == "{}{:05d}.dat".format(output_base, 2)
 
 
+def test_yield_output_files_can_have_different_extension(tmpdir):
+    base = "flow_"
+    output_base = "output_"
+    ext = 'dat'
+    output_ext = 'xyz'
+
+    base_path, _ = create_files_in_dir(tmpdir, base, num=10)
+
+    generated_files = get_files_from_range(base_path, ext=ext,
+            output_base=output_base, output_ext=output_ext)
+
+    fn, fnout = next(generated_files)
+    assert fn == "{}{:05d}.{}".format(base_path, 1, ext)
+    assert fnout == "{}{:05d}.{}".format(output_base, 1, output_ext)
+
+
 def test_yield_existing_files_in_groups_along_with_paths_for_output(tmpdir):
     base = "flow_"
     output_base = "output_"

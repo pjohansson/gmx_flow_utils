@@ -6,7 +6,7 @@ import sys
 def get_files_from_range(
     *fnbase, 
     output_base=None, num_per_output=None, 
-    begin=1, end=None, ext='dat',
+    begin=1, end=None, ext='dat', output_ext=None,
     no_check=False):
     """Yield paths to existing files with given base paths.
 
@@ -46,6 +46,8 @@ def get_files_from_range(
     end (int): Last index to yield input files for.
 
     ext (str): Extension to yield files for.
+
+    output_ext (str): Extension to yield output files for (default is same as for `ext`).
 
     no_check (bool): Set to `True` to only create file names, not check for existance.
 
@@ -128,7 +130,7 @@ def get_files_from_range(
         else:
             return all([os.path.exists(fn) for fn in filenames])
 
-    def get_filename(base, i):
+    def get_filename(base, i, ext):
         return "{}{:05d}.{}".format(base, i, ext)
 
     def get_yielded_single_or_list(filenames):
@@ -155,7 +157,10 @@ def get_files_from_range(
     if num_per_output == None:
         num_per_output = 1
 
-    fns = [get_filename(base, i) for base in fnbase]
+    if output_ext == None:
+        output_ext = ext
+
+    fns = [get_filename(base, i, ext) for base in fnbase]
     filename_group = []
 
     while (all_files_exist(fns) and (end == None or i <= end)):
@@ -163,21 +168,21 @@ def get_files_from_range(
             if output_base == None:
                 yield get_yielded_single_or_list(fns)
             else:
-                fnout = get_filename(output_base, i)
+                fnout = get_filename(output_base, i, output_ext)
                 yield get_yielded_single_or_list(fns), fnout
         
         else:
             filename_group.append(get_yielded_single_or_list(fns))
 
             if len(filename_group) == num_per_output:
-                fnout = get_filename(output_base, index_output)
+                fnout = get_filename(output_base, index_output, output_ext)
                 yield transpose_if_multiple_bases(filename_group, len(fnbase)), fnout
 
                 filename_group = []
                 index_output += 1
 
         i += 1
-        fns = [get_filename(base, i) for base in fnbase]
+        fns = [get_filename(base, i, ext) for base in fnbase]
 
 
 def backup_file(path, log=sys.stderr):
