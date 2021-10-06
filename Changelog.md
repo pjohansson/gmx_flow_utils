@@ -9,6 +9,7 @@
 * `get_files_from_range` can now generate files for multiple input base paths
 * `get_files_from_range` can now generate file names without checking that
   they exist using the kwarg `no_check=True`
+* `get_files_from_range` can now generate files with a non-1 stride between them
 
 # 0.1
 * `gmx_flow.py` created as a single-file module

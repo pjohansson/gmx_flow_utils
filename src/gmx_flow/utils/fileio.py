@@ -6,7 +6,7 @@ import sys
 def get_files_from_range(
     *fnbase, 
     output_base=None, num_per_output=None, 
-    begin=1, end=None, ext='dat', output_ext=None,
+    begin=1, end=None, stride=1, ext='dat', output_ext=None,
     no_check=False):
     """Yield paths to existing files with given base paths.
 
@@ -181,7 +181,7 @@ def get_files_from_range(
                 filename_group = []
                 index_output += 1
 
-        i += 1
+        i += stride
         fns = [get_filename(base, i, ext) for base in fnbase]
 
 

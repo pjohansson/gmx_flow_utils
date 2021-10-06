@@ -60,6 +60,21 @@ def test_get_range_with_end_smaller_than_begin_yields_no_files(tmpdir):
     assert len(generated_files) == 0
 
 
+def test_get_existing_files_from_range_with_a_stride(tmpdir):
+    base = "flow_"
+
+    base_path, _ = create_files_in_dir(tmpdir, base, num=11)
+
+    generated_files = list(
+        get_files_from_range(base_path, stride=3))
+
+    assert len(generated_files) == 4
+    assert generated_files[0] == "{}{:05d}.dat".format(base_path, 1)
+    assert generated_files[1] == "{}{:05d}.dat".format(base_path, 4)
+    assert generated_files[2] == "{}{:05d}.dat".format(base_path, 7)
+    assert generated_files[3] == "{}{:05d}.dat".format(base_path, 10)
+
+
 def test_get_existing_files_with_non_default_extension(tmpdir):
     base = "flow_"
     ext = 'png'
@@ -133,6 +148,34 @@ def test_yield_existing_files_in_groups_along_with_paths_for_output(tmpdir):
     assert fns[1] == "{}{:05d}.dat".format(base_path, 6)
     assert fns[2] == "{}{:05d}.dat".format(base_path, 7)
     assert fns[3] == "{}{:05d}.dat".format(base_path, 8)
+    assert fnout == "{}{:05d}.dat".format(output_base, 2)
+
+
+def test_yield_existing_files_in_groups_with_stride_keeps_stride_inside_groups(tmpdir):
+    base = "flow_"
+    output_base = "output_"
+    num_group = 4
+    stride = 3
+
+    base_path, _ = create_files_in_dir(tmpdir, base, num=2 * stride * num_group)
+
+    generated_files = get_files_from_range(
+        base_path, output_base=output_base, num_per_output=num_group, stride=stride)
+
+    fns, fnout = next(generated_files)
+    assert len(fns) == num_group
+    assert fns[0] == "{}{:05d}.dat".format(base_path, 1)
+    assert fns[1] == "{}{:05d}.dat".format(base_path, 4)
+    assert fns[2] == "{}{:05d}.dat".format(base_path, 7)
+    assert fns[3] == "{}{:05d}.dat".format(base_path, 10)
+    assert fnout == "{}{:05d}.dat".format(output_base, 1)
+
+    fns, fnout = next(generated_files)
+    assert len(fns) == num_group
+    assert fns[0] == "{}{:05d}.dat".format(base_path, 13)
+    assert fns[1] == "{}{:05d}.dat".format(base_path, 16)
+    assert fns[2] == "{}{:05d}.dat".format(base_path, 19)
+    assert fns[3] == "{}{:05d}.dat".format(base_path, 22)
     assert fnout == "{}{:05d}.dat".format(output_base, 2)
 
 
