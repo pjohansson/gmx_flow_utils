@@ -6,6 +6,8 @@
 * Added `convert_gmx_flow_1_to_2.py` script
 
 # 0.2.1
+* Added `draw_flow_field.py` script for simple plotting of data
+* `matplotlib` is now a requirement
 * `get_files_from_range` can now generate files for multiple input base paths
 * `get_files_from_range` can now generate file names without checking that
   they exist using the kwarg `no_check=True`
