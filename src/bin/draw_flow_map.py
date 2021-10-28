@@ -7,9 +7,10 @@ import textwrap
 
 from argparse import ArgumentParser
 from gmx_flow import read_data
+from gmx_flow.utils.argparse import parse_float_or_none
+from gmx_flow.utils.graph import apply_clim, decorate_graph
 
-from draw_flow_field import add_flow_magnitude, apply_clim, decorate_graph, get_label_legend, parse_float_or_none
-
+from draw_flow_field import add_flow_magnitude, get_label_legend 
 
 @decorate_graph
 def draw_flow(ax, flow, info, label):
