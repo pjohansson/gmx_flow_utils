@@ -10,19 +10,25 @@ from gmx_flow import read_data
 from gmx_flow.utils.argparse import parse_float_or_none
 from gmx_flow.utils.graph import apply_clim, decorate_graph
 
-from draw_flow_field import add_flow_magnitude, get_label_legend 
+from draw_flow_field import add_flow_magnitude, get_label_legend
 
 @decorate_graph
-def draw_flow(ax, flow, info, label):
+def draw_flow(ax, flow, info, label, vlim=None):
     xs = flow['X']
     ys = flow['Y']
     values = flow[label]
 
     bins = info['shape']
 
+    try:
+        vmin, vmax = vlim
+    except:
+        vmin = None
+        vmax = None
+
     # hist2d returns its scalar mappable data in its fourth argument,
     # which is then used to fill the colorbar mapping
-    _, _, _, sm = ax.hist2d(xs, ys, weights=values, bins=bins)
+    _, _, _, sm = ax.hist2d(xs, ys, weights=values, bins=bins, vmin=vmin, vmax=vmax)
 
     return sm
 
@@ -42,26 +48,35 @@ if __name__ == '__main__':
 
             """),
             epilog=textwrap.dedent("""
-            Copyright Petter Johansson and contributors (2020-2021). 
+            Copyright Petter Johansson and contributors (2020-2021).
 
-            Distributed freely under the Blue Oak license 
+            Distributed freely under the Blue Oak license
             (https://blueoakcouncil.org/license/1.0.0).
 
             """),
             formatter_class=argparse.RawDescriptionHelpFormatter,
             )
 
-    parser.add_argument('path', 
+    parser.add_argument('path',
             help="path to flow field data file")
-    parser.add_argument('-l', '--label', 
+    parser.add_argument('-l', '--label',
             default='M', choices=['M', 'U', 'V', 'flow', 'T'],
             help='data label to draw')
-    
+    parser.add_argument('-c', '--cutoff',
+            default=None, type=float,
+            help="remove bins with `--cutoff-label` less than this")
+    parser.add_argument('--cutoff-label',
+            default='M', choices=['M', 'U', 'V', 'flow', 'T'],
+            help="data label to use with `--cutoff` (default: %(default)s)")
+    parser.add_argument('--vlim',
+            type=parse_float_or_none, nargs=2, metavar=('VMIN', 'VMAX'),
+            help="limits of color axis")
+
     parser_graph = parser.add_argument_group('graph options')
-    parser_graph.add_argument('--xlim', 
+    parser_graph.add_argument('--xlim',
             type=parse_float_or_none, nargs=2, metavar=('XMIN', 'XMAX'),
             help="graph limits along x axis")
-    parser_graph.add_argument('--ylim', 
+    parser_graph.add_argument('--ylim',
             type=parse_float_or_none, nargs=2, metavar=('YMIN', 'YMAX'),
             help="graph limits along y axis")
     parser_graph.add_argument('--title',
@@ -73,19 +88,19 @@ if __name__ == '__main__':
     parser_graph.add_argument('--ylabel',
             type=str, default='y',
             help="y axis label")
-    parser_graph.add_argument('--save', 
+    parser_graph.add_argument('--save',
             default=None, type=str, metavar='PATH',
             help="save figure to path")
-    parser_graph.add_argument('--dpi', 
-            default=None, type=int, 
+    parser_graph.add_argument('--dpi',
+            default=None, type=int,
             help="dpi of figure")
-    parser_graph.add_argument('--transparent', 
+    parser_graph.add_argument('--transparent',
             action='store_true',
             help="save figure with transparent background")
-    parser_graph.add_argument('--noshow', 
+    parser_graph.add_argument('--noshow',
             action='store_false', dest='show',
             help="do not show figure window")
-    parser_graph.add_argument('--nocolorbar', 
+    parser_graph.add_argument('--nocolorbar',
             action='store_false', dest='show_colorbar',
             help="do not show color bar")
 
@@ -95,6 +110,9 @@ if __name__ == '__main__':
 
     if args.label.lower() == 'flow':
         flow = add_flow_magnitude(flow)
+
+    if args.cutoff != None:
+        flow = apply_clim(flow, [args.cutoff, None], args.cutoff_label)
 
     ax_kwargs = {
         'xlim': args.xlim,
@@ -109,10 +127,10 @@ if __name__ == '__main__':
         'transparent': args.transparent,
         'dpi': args.dpi,
     }
-    
+
     cbar_kwargs = {
         'colorbar': args.show_colorbar,
         'colorbar_label': get_label_legend(args.label, info['format']),
     }
 
-    draw_flow(flow, info, args.label, **ax_kwargs, **cbar_kwargs)
+    draw_flow(flow, info, args.label, vlim=args.vlim, **ax_kwargs, **cbar_kwargs)
