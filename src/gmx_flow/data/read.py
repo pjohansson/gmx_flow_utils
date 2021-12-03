@@ -1,17 +1,69 @@
 import copy
 import numpy as np
 
+from .gmxflow import GmxFlow, GmxFlowVersion
+from typing import Dict, BinaryIO, List, Tuple, Sequence
+
 # Fields expected to be read in the files.
-_FIELDS = ['X', 'Y', 'N', 'T', 'M', 'U', 'V']
+__FIELDS = ['X', 'Y', 'N', 'T', 'M', 'U', 'V']
 
 # Fields which represent data in the flow field, excluding positions.
-_DATA_FIELDS = ['N', 'T', 'M', 'U', 'V']
+__DATA_FIELDS = ['N', 'T', 'M', 'U', 'V']
 
 # List of fields in the order of writing.
-_FIELDS_ORDERED = ['N', 'T', 'M', 'U', 'V']
+__FIELDS_ORDERED = ['N', 'T', 'M', 'U', 'V']
 
 
-def read_data(filename):
+def read_gmx_flow(filename: str) -> GmxFlow:
+    """Read flow field data from a file.
+
+    Args:
+        filename (str): File to read data from.
+
+    Returns:
+        GmxFlow: Flow field data.
+
+    """
+
+    def get_header_field(info, label):
+        try:
+            field = info[label]
+        except KeyError:
+            raise ValueError(f"could not read {label} from `{filename}`")
+
+        return field
+
+    data, info = read_data(filename)
+
+    shape = get_header_field(info, 'shape')
+    spacing = get_header_field(info, 'spacing')
+    origin = get_header_field(info, 'origin')
+    version_str = get_header_field(info, 'format')
+
+    if version_str == 'GMX_FLOW_1':
+        version = GmxFlowVersion(1)
+    elif version_str == 'GMX_FLOW_2':
+        version = GmxFlowVersion(2)
+    else:
+        raise ValueError(f"unknown file format `{version_str}`")
+
+    dtype = [(l, float) for l in data.keys()]
+    num_bins = np.prod(shape)
+    data_new = np.zeros((num_bins, ), dtype=dtype)
+
+    for key, value in data.items():
+        data_new[key] = value
+
+    return GmxFlow(
+        data=data_new,
+        shape=shape,
+        spacing=spacing,
+        version=version,
+        origin=origin,
+        )
+
+
+def read_data(filename: str) -> Tuple[Dict[str, np.ndarray], Dict[str, str]]:
     """Read field data from a file.
 
     The data is returned on a regular grid, adding zeros for bins with no values
@@ -39,19 +91,19 @@ def read_data(filename):
     y = y0 + dy * (np.arange(ny) + 0.5)
     xs, ys = np.meshgrid(x, y, indexing='ij')
 
-    grid = np.zeros((nx, ny), dtype=[(l, float) for l in _FIELDS])
+    grid = np.zeros((nx, ny), dtype=[(l, float) for l in __FIELDS])
     grid['X'] = xs
     grid['Y'] = ys
 
-    for l in _DATA_FIELDS:
+    for l in __DATA_FIELDS:
         grid[l][data['IX'], data['IY']] = data[l]
 
     grid = grid.ravel()
 
-    return {l: grid[l] for l in _FIELDS}, info
+    return {l: grid[l] for l in __FIELDS}, info
 
 
-def _read_values(fp, num_values, fields):
+def _read_values(fp: BinaryIO, num_values: int, fields: Sequence[str]) -> Dict[str, np.ndarray]:
     """Read the binary data in the given order."""
 
     dtypes = {
@@ -70,7 +122,7 @@ def _read_values(fp, num_values, fields):
     }
 
 
-def _read_header(fp):
+def _read_header(fp: BinaryIO) -> Tuple[List[str], int, Dict[str, str]]:
     """Read header information and forward the pointer to the data."""
 
     def read_shape(line):
