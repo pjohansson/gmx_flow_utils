@@ -6,7 +6,7 @@ import numpy as np
 import textwrap
 
 from argparse import ArgumentParser
-from gmx_flow import read_data
+from gmx_flow import read_data, supersample_data
 from gmx_flow.utils.argparse import parse_float_or_none
 from gmx_flow.utils.graph import apply_clim, decorate_graph
 
@@ -28,7 +28,10 @@ def draw_flow(ax, flow, info, label, vlim=None):
 
     # hist2d returns its scalar mappable data in its fourth argument,
     # which is then used to fill the colorbar mapping
-    _, _, _, sm = ax.hist2d(xs, ys, weights=values, bins=bins, vmin=vmin, vmax=vmax)
+    _, _, _, sm = ax.hist2d(
+        xs, ys,
+        weights=values, bins=bins,
+        vmin=vmin, vmax=vmax)
 
     return sm
 
@@ -68,6 +71,9 @@ if __name__ == '__main__':
     parser.add_argument('--cutoff-label',
             default='M', choices=['M', 'U', 'V', 'flow', 'T'],
             help="data label to use with `--cutoff` (default: %(default)s)")
+    parser.add_argument('--supersample',
+            default=1, type=int, metavar='N',
+            help="supersample data by a given factor")
     parser.add_argument('--vlim',
             type=parse_float_or_none, nargs=2, metavar=('VMIN', 'VMAX'),
             help="limits of color axis")
@@ -111,8 +117,11 @@ if __name__ == '__main__':
     if args.label.lower() == 'flow':
         flow = add_flow_magnitude(flow)
 
+    if args.supersample > 1:
+        flow, info = supersample_data(flow, info, args.supersample, labels=[args.label, args.cutoff_label])
+
     if args.cutoff != None:
-        flow = apply_clim(flow, [args.cutoff, None], args.cutoff_label)
+        flow = apply_clim(flow, [args.cutoff, None], args.cutoff_label, info=info)
 
     ax_kwargs = {
         'xlim': args.xlim,

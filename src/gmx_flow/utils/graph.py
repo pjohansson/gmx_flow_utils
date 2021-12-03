@@ -2,26 +2,77 @@
 
 
 import matplotlib.pyplot as plt
-import numpy as np 
+import numpy as np
 
 
-def apply_clim(flow, clim, label):
+def apply_clim(flow, clim, label, info=None):
+    """Keep only bins where the `label` value is within `clim = (min, max)`.
+
+    If an `info` dictionary is supplied its `shape` will be updated
+    to contain the updated shape after cutting.
+
+    """
+
+    def calc_shape(inds):
+        nx, ny = inds.shape
+
+        x0 = None
+        y0 = None
+
+        i = 0
+        while i < nx:
+            column = inds[i, :]
+
+            if column.any():
+                x1 = i
+                if x0 == None:
+                    x0 = i
+
+            i += 1
+
+        i = 0
+        while i < ny:
+            row = inds[:, i]
+
+            if row.any():
+                y1 = i
+                if y0 == None:
+                    y0 = i
+
+            i += 1
+
+        try:
+            nx = x1 - x0 + 1
+        except:
+            nx = 0
+
+        try:
+            ny = y1 - y0 + 1
+        except:
+            ny = 0
+
+        return nx, ny
+
     if clim == None:
         return flow
-    
+
     cmin, cmax = clim
 
     if cmin == None:
         cmin = -np.inf
-    
+
     if cmax == None:
         cmax = np.inf
-    
+
     inds = (flow[label] >= cmin) & (flow[label] <= cmax)
+
+    if info != None:
+        inds_reshaped = inds.reshape(info['shape'])
+        info['shape'] = calc_shape(inds_reshaped)
 
     for l in flow.keys():
         flow[l] = flow[l][inds]
-    
+
     return flow
 
 
@@ -30,7 +81,7 @@ def decorate_graph(func):
 
     Args:
         func: Function to decorate (see below for requirements)
-    
+
     Returns:
         (fig, ax): Tuple with created and/or used `Figure` and `Axes`
 
@@ -40,20 +91,20 @@ def decorate_graph(func):
      * Return a `ScalarMappable` to be used for `ColorBar` creation
        (if applicable)
      * Additional positional and keyword arguments not used by the decorator
-       are forwarded to the decorated function. 
-       
+       are forwarded to the decorated function.
+
     If both the decorator and decorated functions share keyword arguments,
     the decorator will not forward them. Such arguments can be forwarded
     using the `extra_kwargs` keyword argument.
-    
+
     The decorator by default creates a new `Figure` and `Axes` to draw in.
-    An already created `Axes` can be supplied with the `use_ax` keyword 
-    argument. 
-    
+    An already created `Axes` can be supplied with the `use_ax` keyword
+    argument.
+
     """
 
     def inner(
-            *func_args, 
+            *func_args,
             use_ax=None,
             title=None,
             xlabel=None,
@@ -105,7 +156,7 @@ def decorate_graph(func):
             plt.show()
 
         return fig, ax
-    
+
     return inner
 
 
