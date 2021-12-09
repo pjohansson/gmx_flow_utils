@@ -2,33 +2,46 @@
 
 import os
 import sys
+from typing import Generator, NewType, Optional, Sequence, TextIO, Tuple, Union
 
-def get_files_from_range(
-    *fnbase, 
-    output_base=None, num_per_output=None, 
-    begin=1, end=None, stride=1, ext='dat', output_ext=None,
-    no_check=False):
+Path = str
+PathWithOutput = Tuple[str, str]
+Paths = Sequence[str]
+PathsWithSingleOutput = Tuple[Sequence[str], str]
+GetRangePaths = Union[Path, PathWithOutput, Paths, PathsWithSingleOutput]
+
+
+def get_files_from_range(*fnbase: str,
+                         output_base: Optional[str] = None,
+                         num_per_output: Optional[int] = None,
+                         begin: int = 1,
+                         end: Optional[int] = None,
+                         stride: int = 1,
+                         ext: str = 'dat',
+                         output_ext: Optional[str] = None,
+                         no_check: bool = False,
+                         ) -> Generator[GetRangePaths, None, None]:
     """Yield paths to existing files with given base paths.
 
     Filenames are constructed using the format `{base}{:05d}.{ext}`,
-    i.e. `flow_00001.dat`, `flow_00002.dat`, ... 
+    i.e. `flow_00001.dat`, `flow_00002.dat`, ...
 
-    Several bases can be supplied, in which case the filenames 
-    for all bases are verified to exist and returned as a list. 
-    The generation stops as soon as any generated path does not 
+    Several bases can be supplied, in which case the filenames
+    for all bases are verified to exist and returned as a list.
+    The generation stops as soon as any generated path does not
     exist.
 
-    Unless specific beginning and end points are specified, the function 
+    Unless specific beginning and end points are specified, the function
     yields all filenames with the given base and numbering starting from
     index 1 until a file with the next larger index is not found.
 
     Optionally, the filenames can be yielded along with a corresponding
-    output path by supplying one with `output_base`. The output paths 
-    are constructed using the same pattern as the input paths, with the 
-    same file extension. Example use: convert a set of flow field maps 
+    output path by supplying one with `output_base`. The output paths
+    are constructed using the same pattern as the input paths, with the
+    same file extension. Example use: convert a set of flow field maps
     and write the results to new files.
 
-    Furthermore, by supplying a number to `num_per_output` we can yield 
+    Furthermore, by supplying a number to `num_per_output` we can yield
     a number of input paths along with a single output path. Example use:
     block averaging of N input files, saving the average to new files.
 
@@ -59,9 +72,9 @@ def get_files_from_range(
     fn, fnout (str, str): input and output files if `output_base` != `None`
     fns, fnout ([str], str): list of input files for a single output file
                              if `output_base` and `num_per_output` != `None`
-    [fns1, fns2, ...], fnout ([[str]], str): 
+    [fns1, fns2, ...], fnout ([[str]], str):
                           yielding multiple files for multiple bases, along with
-                          an output file. fns1 is the files for base1, fns2 for 
+                          an output file. fns1 is the files for base1, fns2 for
                           base2, etc.
 
     # Examples
@@ -170,7 +183,7 @@ def get_files_from_range(
             else:
                 fnout = get_filename(output_base, i, output_ext)
                 yield get_yielded_single_or_list(fns), fnout
-        
+
         else:
             filename_group.append(get_yielded_single_or_list(fns))
 
@@ -185,13 +198,13 @@ def get_files_from_range(
         fns = [get_filename(base, i, ext) for base in fnbase]
 
 
-def backup_file(path, log=sys.stderr):
+def backup_file(path: str, log: Optional[TextIO] = sys.stderr):
     """Backup a file that exists at the given path using the Gromacs standard.
 
     If a file at the given path exists it is enclosed to `#` and the lowest
     non-occupied index.
 
-    By default a message about a performed backup is printed to `sys.stderr`. 
+    By default a message about a performed backup is printed to `sys.stderr`.
     This can be turned off by supplying `log=None` or changed to another writer.
 
     # Arguments
@@ -202,14 +215,14 @@ def backup_file(path, log=sys.stderr):
 
     # Examples
 
-    Saving some data to a file that does not already exist: 
+    Saving some data to a file that does not already exist:
 
     ```
     path = 'data.dat'
     backup_file(path) # Does nothing
     ```
 
-    Saving some data to a file that exists: 
+    Saving some data to a file that exists:
 
     ```
     path = 'data.dat'
@@ -244,5 +257,3 @@ def backup_file(path, log=sys.stderr):
             log.write("backed up '{}' to '{}'\n".format(path, to_path))
 
         os.rename(path, to_path)
-
-

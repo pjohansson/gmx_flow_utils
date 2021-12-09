@@ -2,7 +2,9 @@
 
 import os
 from argparse import ArgumentParser
-from gmx_flow import read_data, write_data, average_data
+
+from gmx_flow import read_flow, write_flow
+from gmx_flow.flow import average_data
 from gmx_flow.utils import backup_file
 
 
@@ -19,7 +21,8 @@ def get_files_from_range(args):
             return get_filename(args.outbase, i)
 
     if args.outbase == None and args.output == None:
-        parser.error('neither \'outbase\' or \'--output\' was specified for output')
+        parser.error(
+            'neither \'outbase\' or \'--output\' was specified for output')
 
     i = args.begin
     n = 1
@@ -53,7 +56,8 @@ def print_file_info(files, fnout, verbosity_level):
     """Print information about the averaging to stdout."""
 
     if len(files) == 1:
-        print("averaging {} file ['{}'] -> '{}'".format(len(files), files[0], fnout))
+        print(
+            "averaging {} file ['{}'] -> '{}'".format(len(files), files[0], fnout))
     elif len(files) == 2:
         print("averaging {} files ['{}', '{}'] -> '{}'".format(
             len(files), files[0], files[1], fnout))
@@ -69,36 +73,37 @@ def print_file_info(files, fnout, verbosity_level):
 
 if __name__ == '__main__':
     parser = ArgumentParser(
-            description="""Average flow field files. 
+        description="""Average flow field files.
 
-            All flow fields must have the same grid shape and are also assumed to share 
+            All flow fields must have the same grid shape and are also assumed to share
             origin and bin sizes. They should the in the `GMX_FLOW` file format, supported
             by the `gmx_flow` module.
             """,
-            epilog="""Copyright Petter Johansson and contributors (2020). 
+        epilog="""Copyright Petter Johansson and contributors (2020).
 
-            Distributed freely under the Blue Oak license 
+            Distributed freely under the Blue Oak license
             (https://blueoakcouncil.org/license/1.0.0).
             """)
 
     subparsers = parser.add_subparsers(dest='subcommand', required=True,
-            title='subcommands',
-            description='Sub-commands for input file selection.')
+                                       title='subcommands',
+                                       description='Sub-commands for input file selection.')
 
-    parser_files = subparsers.add_parser('files', 
-            description="""Average a given set of flow field files and write to a new file.
-            """, 
-            help='average a list of flow field files')
-    parser_files.add_argument('files', type=str, nargs='+', 
-            help='list of flow field files to average')
-    parser_files.add_argument('output', type=str, help='file to write average into')
+    parser_files = subparsers.add_parser('files',
+                                         description="""Average a given set of flow field files and write to a new file.
+            """,
+                                         help='average a list of flow field files')
+    parser_files.add_argument('files', type=str, nargs='+',
+                              help='list of flow field files to average')
+    parser_files.add_argument(
+        'output', type=str, help='file to write average into')
 
-    parser_range = subparsers.add_parser('range', 
-            description="""Average a sequential range of flow field files.
+    parser_range = subparsers.add_parser('range',
+                                         description="""Average a sequential range of flow field files.
 
-            Files are assumed to have paths of the format '{}{:05d}.dat', 
+            Files are assumed to have paths of the format '{}{:05d}.dat',
             i.e. 'flow_00001.dat', 'flow_00002.dat', etc. The script looks for all matching
-            files in this format, starting from the numerical index 1 (can be changed 
+            files in this format, starting from the numerical index 1 (can be changed
             with the '-b' flag) until no more can be found (or until an optional maximum
             index set with the '-e' flag).
 
@@ -116,27 +121,29 @@ if __name__ == '__main__':
                 ['flow_00016.dat', 'flow_00020.dat', ..., 'flow_00020.dat'] -> 'avg_00004.dat'
 
             """,
-            help='average a sequential range of flow field files (\'flow_00001.dat\', \'flow_00002.dat\', ...)')
+                                         help='average a sequential range of flow field files (\'flow_00001.dat\', \'flow_00002.dat\', ...)')
 
     parser_range.add_argument('base', type=str, help='base of input files')
-    parser_range.add_argument('outbase', type=str, nargs='?', 
-            help='base of output files (unless \'-o\' is supplied)')
+    parser_range.add_argument('outbase', type=str, nargs='?',
+                              help='base of output files (unless \'-o\' is supplied)')
     parser_range.add_argument('-o', '--output', type=str, default=None, metavar='PATH',
-            help='write the averaged data into this file (replaces \'outbase\')')
+                              help='write the averaged data into this file (replaces \'outbase\')')
     parser_range.add_argument('-n', '--num', type=int, default=None, metavar='INT',
-            help='number of files to average over (default: all files in range)')
+                              help='number of files to average over (default: all files in range)')
     parser_range.add_argument('-b', '--begin', type=int, default=1, metavar='INT',
-            help='index of first file to read (default: %(default)s)')
+                              help='index of first file to read (default: %(default)s)')
     parser_range.add_argument('-e', '--end', type=int, default=None, metavar='INT',
-            help='index of last file to read (default: inf)')
+                              help='index of last file to read (default: inf)')
     parser_range.add_argument('--extension', type=str, default='dat', metavar='EXT',
-            help='extension for files (default: %(default)s)')
+                              help='extension for files (default: %(default)s)')
 
     parser_files.set_defaults(get_filenames=get_files_from_list)
     parser_range.set_defaults(get_filenames=get_files_from_range)
 
-    parser_files.add_argument('-v', '--verbose', action='count', help='be loud and noisy')
-    parser_range.add_argument('-v', '--verbose', action='count', help='be loud and noisy')
+    parser_files.add_argument(
+        '-v', '--verbose', action='count', help='be loud and noisy')
+    parser_range.add_argument(
+        '-v', '--verbose', action='count', help='be loud and noisy')
 
     args = parser.parse_args()
 
@@ -145,11 +152,8 @@ if __name__ == '__main__':
             if args.verbose != None and args.verbose > 0:
                 print_file_info(files, fnout, args.verbose)
 
-            data, info = read_data(files[0])
-
-            data_list = [data] + [d for d, info in [read_data(fn) for fn in files[1:]]]
-
-            avg_data = average_data(data_list)
+            flow_fields = [read_flow(fn) for fn in files]
+            avg_flow = average_data(flow_fields)
 
             backup_file(fnout)
-            write_data(fnout, avg_data, info)
+            write_flow(fnout, avg_flow)

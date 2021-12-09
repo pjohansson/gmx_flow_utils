@@ -1,91 +1,69 @@
 import numpy as np
 
-from gmx_flow import convert_gmx_flow_1_to_2
+from gmx_flow import GmxFlow, GmxFlowVersion
+from gmx_flow.flow import convert_gmx_flow_1_to_2
+
+
+def init_data_record(shape, spacing, data_fields=['M']):
+    nx, ny = shape
+    dx, dy = spacing
+
+    x = dx * np.arange(nx)
+    y = dy * np.arange(ny)
+    xs, ys = np.meshgrid(x, y, indexing='ij')
+
+    dtype = [(label, float) for label in ['X', 'Y'] + data_fields]
+    data = np.zeros((nx, ny), dtype=dtype)
+
+    data['X'] = xs
+    data['Y'] = ys
+
+    for label in data_fields:
+        data[label] = np.random.random(data.shape)
+
+    return data
 
 
 def test_convert_version_1_to_2_divides_mass_field_by_volume():
-    xs = np.arange(10)
-    ms = np.random.random(10)
-
-    info = {
-        'shape': (2, 5),
-        'spacing': (1.0, 2.0),
-        'format': 'GMX_FLOW_1',
-        'origin': (0., 0.),
-    }
-
-    dx, dy = info['spacing']
+    shape = 10, 5
+    dx = 1.
+    dy = 2.
     width = 5.
-    volume = dx * dy * width
+    bin_volume = dx * dy * width
 
-    data = {
-        'X': xs,
-        'M': ms,
-    }
+    data = init_data_record(shape, (dx, dy))
+    version = GmxFlowVersion(1)
 
-    data_converted, info_converted = convert_gmx_flow_1_to_2(data, info, width)
+    flow = GmxFlow(data, shape=shape, spacing=(dx, dy), version=version)
+    flow_converted = convert_gmx_flow_1_to_2(flow, width)
 
-    assert np.array_equal(data_converted['X'], xs)
-    assert np.array_equal(data_converted['M'], ms / volume)
-
-
-def test_convert_format_does_not_modify_input():
-    xs = np.arange(10)
-    ms = np.random.random(10)
-
-    info = {
-        'spacing': (1.0, 2.0),
-        'format': 'GMX_FLOW_1',
-    }
-
-    data = {
-        'X': xs.copy(),
-        'M': ms.copy(),
-    }
-
-    width = 5.
-    _, _ = convert_gmx_flow_1_to_2(data, info, width)
-
-    assert np.array_equal(data['X'], xs)
-    assert np.array_equal(data['M'], ms)
+    assert np.array_equal(flow_converted.data['X'], flow.data['X'])
+    assert np.array_equal(
+        flow_converted.data['M'], flow.data['M'] / bin_volume)
 
 
-def test_convert_format_sets_new_format_in_info():
-    xs = np.arange(10)
-    ms = np.random.random(10)
+def test_convert_format_sets_new_version():
+    shape = 10, 5
+    spacing = 1., 2.
 
-    info = {
-        'spacing': (1.0, 2.0),
-        'format': 'GMX_FLOW_1',
-    }
+    data = init_data_record(shape, spacing)
+    version = GmxFlowVersion(1)
 
-    data = {
-        'X': xs.copy(),
-        'M': ms.copy(),
-    }
+    flow = GmxFlow(data, shape=shape, spacing=spacing, version=version)
+    flow_converted = convert_gmx_flow_1_to_2(flow, 5.)
 
-    width = 5.
-    _, info_converted = convert_gmx_flow_1_to_2(data, info, width)
-
-    assert info_converted['format'] == 'GMX_FLOW_2'
+    assert flow_converted.version == GmxFlowVersion(2)
 
 
 def test_convert_from_2_to_2_returns_copy_not_reference():
-    xs = np.arange(10)
-    ms = np.random.random(10)
+    shape = 10, 5
+    spacing = 1., 2.
 
-    info = {
-        'spacing': (1.0, 2.0),
-        'format': 'GMX_FLOW_2',
-    }
+    data = init_data_record(shape, spacing)
+    version = GmxFlowVersion(2)
 
-    data = {
-        'X': xs.copy(),
-        'M': ms.copy(),
-    }
+    flow = GmxFlow(data, shape=shape, spacing=spacing, version=version)
+    flow_converted = convert_gmx_flow_1_to_2(flow, 5.)
 
-    width = 5.
-    data_return, info_return = convert_gmx_flow_1_to_2(data, info, width)
-
-    assert id(data) != id(data_return)
-    assert id(info) != id(info_return)
+    assert flow_converted.version == GmxFlowVersion(2)
+    assert not (flow_converted.data is flow.data)

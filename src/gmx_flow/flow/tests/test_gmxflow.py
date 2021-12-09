@@ -1,5 +1,6 @@
 import numpy as np
-from gmx_flow.data.gmxflow import *
+from gmx_flow import *
+
 
 def init_data_record(shape, spacing, data_fields=['M', 'U', 'V']):
     nx, ny = shape
@@ -28,7 +29,9 @@ def test_init_gmx_flow_sets_data():
     data = init_data_record(shape=shape, spacing=spacing)
     flow = GmxFlow(data.copy(), shape=shape, spacing=spacing)
 
-    assert np.array_equal(flow.data, data)
+    for l in data.dtype.names:
+        assert np.array_equal(flow.data[l], data[l])
+
 
 def test_init_gmx_flow_sets_shape_and_spacing():
     shape = (10, 5)
@@ -39,6 +42,7 @@ def test_init_gmx_flow_sets_shape_and_spacing():
 
     assert flow.shape == shape
     assert flow.spacing == spacing
+
 
 def test_init_gmx_flow_reshapes_data_array():
     shape = (10, 5)
@@ -52,24 +56,28 @@ def test_init_gmx_flow_reshapes_data_array():
     flow = GmxFlow(data_1d, shape=shape, spacing=spacing)
     assert flow.data.shape == shape
 
+
 def test_init_gmx_flow_sets_record_fields():
     shape = (10, 5)
     spacing = (3., 5.)
 
     data_fields = ['M', 'T', 'N', 'U', 'V', 'extra']
-    data = init_data_record(shape=shape, spacing=spacing, data_fields=data_fields)
+    data = init_data_record(shape=shape, spacing=spacing,
+                            data_fields=data_fields)
 
     flow = GmxFlow(data, shape=shape, spacing=spacing)
 
-    all_fields = ['X', 'Y'] + data_fields
+    all_fields = ['X', 'Y', 'flow'] + data_fields
     assert set(flow.fields) == set(all_fields)
+
 
 def test_init_gmx_flow_sets_available_common_accessors():
     shape = (10, 5)
     spacing = (3., 5.)
 
     data_fields = ['M', 'U', 'V']
-    data = init_data_record(shape=shape, spacing=spacing, data_fields=data_fields)
+    data = init_data_record(shape=shape, spacing=spacing,
+                            data_fields=data_fields)
     flow = GmxFlow(data, shape=shape, spacing=spacing)
 
     assert np.array_equal(flow.x, flow.data['X'])
@@ -77,6 +85,35 @@ def test_init_gmx_flow_sets_available_common_accessors():
     assert np.array_equal(flow.u, flow.data['U'])
     assert np.array_equal(flow.v, flow.data['V'])
     assert np.array_equal(flow.mass, flow.data['M'])
+
+
+def test_init_gmx_flow_adds_flow_magnitude():
+    shape = (10, 5)
+    spacing = (3., 5.)
+
+    data_fields = ['M', 'U', 'V']
+    data = init_data_record(shape=shape, spacing=spacing,
+                            data_fields=data_fields)
+    flow = GmxFlow(data, shape=shape, spacing=spacing)
+    assert 'flow' in flow.fields
+
+    magnitude = np.sqrt(flow.data['U']**2 + flow.data['V']**2)
+    assert np.all(np.isclose(flow.data['flow'], magnitude))
+    assert np.array_equal(flow.flow, flow.data['flow'])
+
+
+def test_init_gmx_flow_does_not_add_magnitude_if_flow_is_not_present():
+    shape = (10, 5)
+    spacing = (3., 5.)
+
+    data_fields = ['M']
+    data = init_data_record(shape=shape, spacing=spacing,
+                            data_fields=data_fields)
+    flow = GmxFlow(data, shape=shape, spacing=spacing)
+
+    assert 'flow' not in flow.fields
+    assert 'flow' not in flow.data.dtype.names
+
 
 def test_copy_gmx_flow_returns_deep_copy():
     shape = (10, 5)
@@ -98,6 +135,7 @@ def test_copy_gmx_flow_returns_deep_copy():
     flow2._backup_data['M'] *= 2.
     assert np.array_equal(flow2.data['M'], flow2._backup_data['M'])
 
+
 def test_gmx_flow_shape_is_xy_indexing():
     shape = (10, 5)
     spacing = (3., 5.)
@@ -112,6 +150,7 @@ def test_gmx_flow_shape_is_xy_indexing():
 
     assert np.array_equal(x, flow.data['X'][:, 0])
     assert np.array_equal(y, flow.data['Y'][0, :])
+
 
 def test_gmx_flow_set_xlims_changes_data_and_shape():
     shape = (10, 10)
@@ -130,6 +169,7 @@ def test_gmx_flow_set_xlims_changes_data_and_shape():
     assert np.array_equal(flow.x, flow.data['X'])
 
     assert np.all((flow.x >= xmin) & (flow.x <= xmax))
+
 
 def test_gmx_flow_set_ylims_changes_data_and_shape():
     shape = (10, 10)

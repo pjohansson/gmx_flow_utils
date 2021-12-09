@@ -4,79 +4,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-def apply_clim(flow, clim, label, info=None):
-    """Keep only bins where the `label` value is within `clim = (min, max)`.
-
-    If an `info` dictionary is supplied its `shape` will be updated
-    to contain the updated shape after cutting.
-
-    """
-
-    def calc_shape(inds):
-        nx, ny = inds.shape
-
-        x0 = None
-        y0 = None
-
-        i = 0
-        while i < nx:
-            column = inds[i, :]
-
-            if column.any():
-                x1 = i
-                if x0 == None:
-                    x0 = i
-
-            i += 1
-
-        i = 0
-        while i < ny:
-            row = inds[:, i]
-
-            if row.any():
-                y1 = i
-                if y0 == None:
-                    y0 = i
-
-            i += 1
-
-        try:
-            nx = x1 - x0 + 1
-        except:
-            nx = 0
-
-        try:
-            ny = y1 - y0 + 1
-        except:
-            ny = 0
-
-        return nx, ny
-
-    if clim == None:
-        return flow
-
-    cmin, cmax = clim
-
-    if cmin == None:
-        cmin = -np.inf
-
-    if cmax == None:
-        cmax = np.inf
-
-    inds = (flow[label] >= cmin) & (flow[label] <= cmax)
-
-    if info != None:
-        inds_reshaped = inds.reshape(info['shape'])
-        info['shape'] = calc_shape(inds_reshaped)
-
-    for l in flow.keys():
-        flow[l] = flow[l][inds]
-
-    return flow
+from matplotlib.axes import Axes
+from matplotlib.cm import ScalarMappable
+from matplotlib.figure import Figure
+from typing import Tuple, Optional, Mapping, Any, Sequence, Callable
 
 
-def decorate_graph(func):
+def decorate_graph(func: Callable[[Axes, Sequence[Any]], ScalarMappable],
+                   ) -> Callable[[Sequence[Any]], Tuple[Figure, Axes]]:
     """Decorator which sets up Axes for figure drawing functions.
 
     Args:
@@ -104,24 +39,25 @@ def decorate_graph(func):
     """
 
     def inner(
-            *func_args,
-            use_ax=None,
-            title=None,
-            xlabel=None,
-            ylabel=None,
-            xlim=(None, None),
-            ylim=(None, None),
-            axis=None,
-            colorbar=False,
-            colorbar_label=None,
-            colorbar_axis_kwargs={},
-            dpi=None,
-            show=True,
-            save=None,
-            tight_layout=False,
-            transparent=False,
-            extra_kwargs={},
-            **func_kwargs):
+            *func_args: Sequence[Any],
+            use_ax: Optional[Axes] = None,
+            title: str = None,
+            xlabel: str = None,
+            ylabel: str = None,
+            xlim: Tuple[float, float] = (None, None),
+            ylim: Tuple[float, float] = (None, None),
+            axis: str = None,
+            colorbar: bool = False,
+            colorbar_label: str = None,
+            colorbar_axis_kwargs: Mapping[str, Any] = {},
+            dpi: float = None,
+            show: bool = True,
+            save: Optional[str] = None,
+            tight_layout: bool = False,
+            transparent: bool = False,
+            extra_kwargs: Mapping[str, Any] = {},
+            **func_kwargs: Mapping[str, Any],
+    ) -> Tuple[Figure, Axes]:
         if use_ax:
             ax = use_ax
             fig = ax.get_figure()
@@ -160,7 +96,12 @@ def decorate_graph(func):
     return inner
 
 
-def _add_colorbar_axis(ax, position="right", size="8%", pad=0.10, **kwargs):
+def _add_colorbar_axis(ax: Axes,
+                       position: str = "right",
+                       size: str = "8%",
+                       pad: float = 0.10,
+                       **kwargs: Mapping[str, Any],
+                       ) -> Axes:
     """Add and return a colorbar `Axes` besides the input `Axes`."""
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable

@@ -17,6 +17,12 @@ class GmxFlowVersion(Enum):
     GMX_FLOW_1 = auto()
     GMX_FLOW_2 = auto()
 
+    def as_header(self):
+        if self == GmxFlowVersion(1):
+            return 'GMX_FLOW_1'
+        else:
+            return 'GMX_FLOW_2'
+
 
 @dataclass
 class GmxFlow:
@@ -129,6 +135,9 @@ class GmxFlow:
     v: np.ndarray = field(default=None, repr=False)
     "Mass flow of each bin along the `y` axis"
 
+    flow: np.ndarray = field(default=None, repr=False)
+    "Flow magnitude in each bin (sqrt(u**2 + v**2))"
+
     mass: np.ndarray = field(default=None, repr=False)
     "Mass density (or total mass for `GMX_FLOW_1`) of each bin"
 
@@ -141,6 +150,7 @@ class GmxFlow:
     _x_flow_label: str = field(default='U', repr=False)
     _y_flow_label: str = field(default='V', repr=False)
     _mass_label: str = field(default='M', repr=False)
+    _flow_label: str = field(default='flow', repr=False)
 
     def __post_init__(self):
         try:
@@ -150,11 +160,32 @@ class GmxFlow:
                 f"cannot reshape data array with shape {self.data.shape} "
                 f"into input shape {self.shape}")
 
+        self._add_flow_magnitude()
         self.reset_view()
 
         self.fields = list(self.data.dtype.names)
         self.units = _get_units_dict(self.version)
         self.descriptions = _get_descriptions_dict(self.version)
+
+    def _add_flow_magnitude(self):
+        try:
+            us = self._backup_data[self._x_flow_label]
+            vs = self._backup_data[self._y_flow_label]
+            magnitude = np.sqrt(us**2 + vs**2)
+        except:
+            pass
+        else:
+            current_fields = list(self._backup_data.dtype.names)
+
+            dtype = [(l, float) for l in current_fields + [self._flow_label]]
+            updated_data = np.zeros(self._backup_data.shape, dtype=dtype)
+
+            for label in current_fields:
+                updated_data[label] = self._backup_data[label]
+
+            updated_data[self._flow_label] = magnitude
+
+            self._backup_data = updated_data
 
     def set_xlim(self, xmin: Optional[float], xmax: Optional[float]):
         """Set limits on bins along the x axis."""
@@ -226,6 +257,11 @@ class GmxFlow:
         except:
             pass
 
+        try:
+            self.flow = self.data[self._flow_label]
+        except:
+            pass
+
     def _update_shape(self):
         """Calculate the shape of the current `data` and update all shapes.
 
@@ -253,6 +289,7 @@ def _get_descriptions_dict(version: GmxFlowVersion) -> Dict[str, str]:
         'Y': 'Axis',
         'U': 'Velocity',
         'V': 'Velocity',
+        'flow': 'Flow magnitude',
         'M': mass,
         'T': 'Temperature',
         'N': 'Number of atoms',
@@ -267,6 +304,7 @@ def _get_units_dict(version: GmxFlowVersion) -> Dict[str, str]:
         'Y': 'nm',
         'U': 'nm/ps',
         'V': 'nm/ps',
+        'flow': 'nm/ps',
         'M': mass,
         'T': 'K',
         'N': '',

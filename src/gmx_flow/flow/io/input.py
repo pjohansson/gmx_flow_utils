@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 
-from .gmxflow import GmxFlow, GmxFlowVersion
+from ..gmxflow import GmxFlow, GmxFlowVersion
 from typing import Dict, BinaryIO, List, Tuple, Sequence
 
 # Fields expected to be read in the files.
@@ -14,7 +14,7 @@ __DATA_FIELDS = ['N', 'T', 'M', 'U', 'V']
 __FIELDS_ORDERED = ['N', 'T', 'M', 'U', 'V']
 
 
-def read_gmx_flow(filename: str) -> GmxFlow:
+def read_flow(filename: str) -> GmxFlow:
     """Read flow field data from a file.
 
     Args:
@@ -33,7 +33,7 @@ def read_gmx_flow(filename: str) -> GmxFlow:
 
         return field
 
-    data, info = read_data(filename)
+    data, info = _read_data(filename)
 
     shape = get_header_field(info, 'shape')
     spacing = get_header_field(info, 'spacing')
@@ -60,10 +60,10 @@ def read_gmx_flow(filename: str) -> GmxFlow:
         spacing=spacing,
         version=version,
         origin=origin,
-        )
+    )
 
 
-def read_data(filename: str) -> Tuple[Dict[str, np.ndarray], Dict[str, str]]:
+def _read_data(filename: str) -> Tuple[Dict[str, np.ndarray], Dict[str, str]]:
     """Read field data from a file.
 
     The data is returned on a regular grid, adding zeros for bins with no values
@@ -103,7 +103,10 @@ def read_data(filename: str) -> Tuple[Dict[str, np.ndarray], Dict[str, str]]:
     return {l: grid[l] for l in __FIELDS}, info
 
 
-def _read_values(fp: BinaryIO, num_values: int, fields: Sequence[str]) -> Dict[str, np.ndarray]:
+def _read_values(fp: BinaryIO,
+                 num_values: int,
+                 fields: Sequence[str],
+                 ) -> Dict[str, np.ndarray]:
     """Read the binary data in the given order."""
 
     dtypes = {
@@ -181,4 +184,3 @@ def _read_header(fp: BinaryIO) -> Tuple[List[str], int, Dict[str, str]]:
     info['num_bins'] = info['shape'][0] * info['shape'][1]
 
     return fields, num_values, info
-
