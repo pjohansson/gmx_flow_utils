@@ -1,9 +1,7 @@
-# Runtime dependencies
-matplotlib >= 3.0
-numpy >= 1.20 # Minimum tested version, likely compatible with some older ones
-scipy >= 1.6
+# Runtime dependencies (minimum versions tested with, might work with older)
+matplotlib >= 3.4
+numpy >= 1.21
+scipy >= 1.7
 
 # Build / install dependencies
-pytest >= 6.2
-setuptools >= 42
-wheel
+setuptools >= 58.0
