@@ -1,3 +1,9 @@
+# 0.3
+* `GmxFlow` has been added as a class to contain the flow field data
+* Reading is now done with `gmx_flow.read_flow`, writing with `gmx_flow.write_flow`
+* Added `draw_flow_map.py` and `draw_flow_field.py` scripts
+* Submodule `data` has been renamed to `flow`
+
 # 0.2
 * Package created for use with `setuptools`
 * `gmx_flow` added as full module with submodules for data manipulation
