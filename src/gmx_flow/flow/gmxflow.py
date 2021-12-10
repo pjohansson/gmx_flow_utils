@@ -170,26 +170,6 @@ class GmxFlow:
         self.units = _get_units_dict(self.version)
         self.descriptions = _get_descriptions_dict(self.version)
 
-    def _add_flow_magnitude(self):
-        try:
-            us = self._backup_data[self._x_flow_label]
-            vs = self._backup_data[self._y_flow_label]
-            magnitude = np.sqrt(us**2 + vs**2)
-        except:
-            pass
-        else:
-            current_fields = list(self._backup_data.dtype.names)
-
-            dtype = [(l, float) for l in current_fields + [self._flow_label]]
-            updated_data = np.zeros(self._backup_data.shape, dtype=dtype)
-
-            for label in current_fields:
-                updated_data[label] = self._backup_data[label]
-
-            updated_data[self._flow_label] = magnitude
-
-            self._backup_data = updated_data
-
     def set_xlim(self, xmin: Optional[float], xmax: Optional[float]):
         """Set limits on bins along the x axis."""
 
@@ -238,8 +218,30 @@ class GmxFlow:
         self._update_field_accessors()
         self._update_box_size()
 
+    def _add_flow_magnitude(self):
+        """Add `flow = sqrt(U**2 + V**2) to `_backup_data`, etc."""
+
+        try:
+            us = self._backup_data[self._x_flow_label]
+            vs = self._backup_data[self._y_flow_label]
+            magnitude = np.sqrt(us**2 + vs**2)
+        except:
+            pass
+        else:
+            current_fields = list(self._backup_data.dtype.names)
+
+            dtype = [(l, float) for l in current_fields + [self._flow_label]]
+            updated_data = np.zeros(self._backup_data.shape, dtype=dtype)
+
+            for label in current_fields:
+                updated_data[label] = self._backup_data[label]
+
+            updated_data[self._flow_label] = magnitude
+
+            self._backup_data = updated_data
+
     def _update_box_size(self):
-        """Return the box size of the current `data` grid."""
+        """Update the box size of the current `data` grid."""
 
         dx, dy = self.spacing
         nx, ny = self.shape
