@@ -107,6 +107,9 @@ class GmxFlow:
     spacing: Tuple[float, float]
     "Spacing between bins in grid"
 
+    box_size: Tuple[float, float] = field(init=False)
+    "Total size of box"
+
     units: Dict[str, str] = field(init=False, repr=False)
     "Dictionary with physical units of each field"
 
@@ -233,6 +236,15 @@ class GmxFlow:
         self.data = self._backup_data[:, :]
         self.shape = self._backup_data.shape
         self._update_field_accessors()
+        self._update_box_size()
+
+    def _update_box_size(self):
+        """Return the box size of the current `data` grid."""
+
+        dx, dy = self.spacing
+        nx, ny = self.shape
+
+        self.box_size = dx * float(nx), dy * float(ny)
 
     def _update_field_accessors(self):
         """Update the views of each field accessor to the `data` object.
@@ -279,6 +291,7 @@ class GmxFlow:
             self.data = np.resize(self.data, self.shape)
 
         self._update_field_accessors()
+        self._update_box_size()
 
 
 def _get_descriptions_dict(version: GmxFlowVersion) -> Dict[str, str]:

@@ -184,3 +184,23 @@ def test_gmx_flow_set_ylims_changes_data_and_shape():
     assert flow.data.shape == (10, 4)
 
     assert np.array_equal(flow.y, flow.data['Y'])
+
+
+def test_gmx_flow_box_size_calculation_uses_shape_from_data_not_backup_data():
+    shape = (5, 7)
+    spacing = (3., 11.)
+
+    data = init_data_record(shape=shape, spacing=spacing)
+    flow = GmxFlow(data, shape=shape, spacing=spacing)
+
+    nx, ny = shape
+    dx, dy = spacing
+    assert flow.box_size == (dx * nx, dy * ny)
+
+    # Adjust the limits slightly so that the upper limits
+    # are not exactly on the edge of the next bin, to
+    # more safely cut our box to the inner bins
+    flow.set_xlim(2. * dx - 0.01, 5. * dx - 0.01)
+    flow.set_ylim(3. * dy - 0.01, 4. * dy - 0.01)
+
+    assert flow.box_size == (3. * dx, 1. * dy)
