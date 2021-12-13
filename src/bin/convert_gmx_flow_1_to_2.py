@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from matplotlib.pyplot import get
 import gmx_flow
 import os
 
@@ -7,6 +8,7 @@ from argparse import ArgumentParser
 from gmx_flow import read_flow, write_flow, GmxFlowVersion
 from gmx_flow.flow import convert_gmx_flow_1_to_2
 from gmx_flow.utils import backup_file, get_files_from_range
+from gmx_flow.utils.argparse import add_common_range_args, get_common_range_kwargs
 from sys import stderr
 
 
@@ -37,26 +39,21 @@ if __name__ == '__main__':
                         type=str, metavar='BASE',
                         help="base path for files to convert")
     parser.add_argument('output_base',
-                        type=str, metavar='BASE',
+                        type=str, metavar='OUTBASE',
                         help='base path for converted files')
     parser.add_argument('width',
                         type=float, metavar='WIDTH',
                         help="width of 2D system, used to compute the bin volume")
 
-    parser.add_argument('-b', '--begin',
-                        type=int, default=1, metavar='INT',
-                        help='index of first file to read (default: %(default)s)')
-    parser.add_argument('-e', '--end',
-                        type=int, default=None, metavar='INT',
-                        help='index of last file to read (default: inf)')
-    parser.add_argument('--ext',
-                        type=str, default='dat',
-                        help='extension for files (default: %(default)s)')
+    add_common_range_args(parser)
+
     parser.add_argument('-q', '--quiet',
                         action='store_true',
                         help="be less loud and noisy")
 
+
     args = parser.parse_args()
+    kwargs_range = get_common_range_kwargs(args)
 
     num_files = 0
     num_already_converted = 0
@@ -64,9 +61,7 @@ if __name__ == '__main__':
     for fn, fnout in get_files_from_range(
             args.base,
             output_base=args.output_base,
-            begin=args.begin,
-            end=args.end,
-            ext=args.ext):
+            **kwargs_range):
         flow = read_flow(fn)
 
         if flow.version == GmxFlowVersion(1):
