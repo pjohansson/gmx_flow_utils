@@ -1,7 +1,7 @@
 """Utilities for working with `ArgumentParser` parsers."""
 
 from argparse import ArgumentParser, _ArgumentGroup, Namespace
-from typing import Optional, TypeVar, Iterable, Dict, Any
+from typing import Optional, TypeVar, Iterable, Dict, Any, Tuple
 
 # From what I understand this is the only way to declare a generic `type` variable
 # to use for the type hinting
@@ -41,7 +41,7 @@ def add_common_range_args(parser: ArgumentParser,
                               help='index of first file to read (default: %(default)s)')
     parser_range.add_argument('-e', '--end',
                               type=int, default=end, metavar='INT',
-                              help='index of last file to read (default: %(default)s)')
+                              help='index of last file to read')
     parser_range.add_argument('--ext',
                               type=str, default=ext,
                               help='extension for files (default: %(default)s)')
@@ -53,6 +53,8 @@ def add_common_graph_args(parser: ArgumentParser,
                           title: str = '',
                           xlabel: str = r'$x$',
                           ylabel: str = r'$y$',
+                          xlim: Tuple[Optional[float], Optional[float]] = (None, None),
+                          ylim: Tuple[Optional[float], Optional[float]] = (None, None),
                           save: Optional[str] = None,
                           dpi: Optional[int] = None,
                           ) -> _ArgumentGroup:
@@ -73,6 +75,14 @@ def add_common_graph_args(parser: ArgumentParser,
     parser_graph.add_argument('--ylabel',
                               type=str, default=ylabel,
                               help="y axis label")
+    parser_graph.add_argument('--xlim',
+                              type=parse_float_or_none, default=xlim,
+                              nargs=2, metavar=('XMIN', 'XMAX'),
+                              help="graph limits along x axis")
+    parser_graph.add_argument('--ylim',
+                              type=parse_float_or_none, default=ylim,
+                              nargs=2, metavar=('YMIN', 'YMAX'),
+                              help="graph limits along y axis")
     parser_graph.add_argument('--save',
                               type=str, default=save, metavar='PATH',
                               help="save figure to path")
@@ -91,10 +101,15 @@ def add_common_graph_args(parser: ArgumentParser,
 
 def get_common_range_kwargs(args: Namespace,
                             keys: Iterable[str] = ['begin', 'end', 'ext'],
+                            skip: Iterable[str] = [],
                             ) -> Dict[str, Any]:
-    """Return common keyword arguments for file range specification from parsed arguments."""
+    """Return common keyword arguments for file range specification from parsed arguments.
 
-    return _args_to_kwargs(args, keys)
+    Keys in the `skip` list will be ignored.
+
+    """
+
+    return _args_to_kwargs(args, keys, skip)
 
 
 def get_common_graph_kwargs(args: Namespace,
@@ -102,21 +117,34 @@ def get_common_graph_kwargs(args: Namespace,
                                 'title',
                                 'xlabel',
                                 'ylabel',
+                                'xlim',
+                                'ylim',
                                 'save',
                                 'dpi',
                                 'transparent',
                                 'show',
                             ],
+                            skip: Iterable[str] = [],
                             ) -> Dict[str, Any]:
-    """Return common keyword arguments for graph specification from parsed arguments."""
+    """Return common keyword arguments for graph specification from parsed arguments.
 
-    return _args_to_kwargs(args, keys)
+    Keys in the `skip` list will be ignored.
+
+    """
+
+    return _args_to_kwargs(args, keys, skip)
 
 
 def _args_to_kwargs(args: Namespace,
                     keys: Iterable[str],
+                    skip: Iterable[str] = [],
                     ) -> Dict[str, Any]:
     """Create a dict from a Namespace, keeping selected keys.
+
+    For additional security keys can be ignored by supplying them
+    in a list with the `skip` keyword argument. This can be useful
+    if a standard set of `keys` is supplied but a non-standard
+    behavior in which some of those are skipped is needed.
 
     The args object should typically be a parsed `ArgumentParser`.
     We transmute it into a dict and get any keys that are in the set.
@@ -125,4 +153,4 @@ def _args_to_kwargs(args: Namespace,
     """
 
     args = vars(args)
-    return {k: v for k, v in args.items() if k in keys}
+    return {k: v for k, v in args.items() if (k in keys) and (k not in skip)}
