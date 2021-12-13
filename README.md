@@ -33,6 +33,7 @@ for reading and writing flow field data.
 Example files are in the `include` directory.
 
 ```python
+import numpy as np
 from gmx_flow import read_flow
 
 flow = read_flow('include/flow_00001.dat')
