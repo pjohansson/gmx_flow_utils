@@ -2,13 +2,22 @@
 
 import os
 import sys
-from typing import Generator, NewType, Optional, Sequence, TextIO, Tuple, Union
+from typing import Generator, Optional, Sequence, TextIO, Tuple, Union, List, Any
 
 Path = str
 PathWithOutput = Tuple[str, str]
 Paths = Sequence[str]
 PathsWithSingleOutput = Tuple[Sequence[str], str]
 GetRangePaths = Union[Path, PathWithOutput, Paths, PathsWithSingleOutput]
+
+
+def get_files_or_range(input: str, **kwargs: Any) -> List[str]:
+    """If input is files, return as list, else return a range."""
+
+    if os.path.exists(input):
+        return [input]
+    else:
+        return list(get_files_from_range(input, **kwargs))
 
 
 def get_files_from_range(*fnbase: str,
