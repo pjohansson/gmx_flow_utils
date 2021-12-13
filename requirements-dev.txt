@@ -1,12 +1,3 @@
-# Runtime dependencies
-matplotlib>=3.4
-numpy>=1.21
-scipy>=1.7
-
-# Build / install dependencies
-setuptools>=58.0
-
-## The following requirements were added by pip freeze:
-autopep8>=1.6
+# Testing dependencies
 pytest>=6.2
 pytest-datafiles>=2.0
