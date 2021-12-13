@@ -9,3 +9,4 @@ setuptools>=58.0
 ## The following requirements were added by pip freeze:
 autopep8>=1.6
 pytest>=6.2
+pytest-datafiles>=2.0
