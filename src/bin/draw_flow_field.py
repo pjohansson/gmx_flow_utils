@@ -10,8 +10,8 @@ from matplotlib.axes import Axes
 from typing import Tuple, Optional, Union
 
 from gmx_flow import read_flow, GmxFlow
-from gmx_flow.utils.argparse import parse_float_or_none
-from gmx_flow.utils.graph import decorate_graph
+from gmx_flow.utils.argparse import parse_float_or_none, add_common_graph_args, get_common_graph_kwargs
+from gmx_flow.utils import decorate_graph
 
 
 @decorate_graph
@@ -91,34 +91,7 @@ if __name__ == '__main__':
                                type=parse_float_or_none, nargs=2, metavar=('VMIN', 'VMAX'),
                                help="limits of color axis")
 
-    parser_graph = parser.add_argument_group('graph options')
-    parser_graph.add_argument('--xlim',
-                              type=parse_float_or_none, nargs=2, metavar=('XMIN', 'XMAX'),
-                              help="graph limits along x axis")
-    parser_graph.add_argument('--ylim',
-                              type=parse_float_or_none, nargs=2, metavar=('YMIN', 'YMAX'),
-                              help="graph limits along y axis")
-    parser_graph.add_argument('--title',
-                              type=str, default=None,
-                              help="graph title")
-    parser_graph.add_argument('--xlabel',
-                              type=str, default='x',
-                              help="x axis label")
-    parser_graph.add_argument('--ylabel',
-                              type=str, default='y',
-                              help="y axis label")
-    parser_graph.add_argument('--save',
-                              default=None, type=str, metavar='PATH',
-                              help="save figure to path")
-    parser_graph.add_argument('--dpi',
-                              default=None, type=int,
-                              help="dpi of figure")
-    parser_graph.add_argument('--transparent',
-                              action='store_true',
-                              help="save figure with transparent background")
-    parser_graph.add_argument('--noshow',
-                              action='store_false', dest='show',
-                              help="do not show figure window")
+    parser_graph = add_common_graph_args(parser)
     parser_graph.add_argument('--nocolorbar',
                               action='store_false', dest='show_colorbar',
                               help="do not show color bar")
@@ -126,35 +99,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     flow = read_flow(args.path)
-
-    try:
-        xmin, xmax = args.xlim
-        flow.set_xlim(xmin, xmax)
-    except:
-        pass
-
-    try:
-        ymin, ymax = args.ylim
-        flow.set_ylim(ymin, ymax)
-    except:
-        pass
+    flow.set_xlim(*args.xlim)
+    flow.set_ylim(*args.ylim)
 
     if args.cutoff != None:
         flow.set_clim(args.cutoff, None, args.cutoff_label)
 
-    ax_kwargs = {
-        'title': args.title,
-        'xlabel': args.xlabel,
-        'ylabel': args.ylabel,
-        'axis': 'scaled',
-        'tight_layout': True,
-        'show': args.show,
-        'save': args.save,
-        'transparent': args.transparent,
-        'dpi': args.dpi,
-    }
+    kwargs_graph = get_common_graph_kwargs(args)
+    kwargs_graph['axis'] = 'scaled'
+    kwargs_graph['tight_layout'] = True
 
-    cbar_kwargs = {
+    kwargs_cbar = {
         'colorbar': (args.color_label != 'none') and args.show_colorbar,
         'colorbar_label': flow.units[args.color_label],
     }
@@ -163,4 +118,5 @@ if __name__ == '__main__':
         flow, args.color_label,
         scale=args.scale, width=args.width,
         arrow_color=args.arrow_color, vlim=args.vlim,
-        **ax_kwargs, **cbar_kwargs)
+        **kwargs_graph,
+        **kwargs_cbar)
