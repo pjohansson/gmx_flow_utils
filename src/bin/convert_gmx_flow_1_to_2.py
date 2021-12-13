@@ -70,7 +70,7 @@ if __name__ == '__main__':
         flow = read_flow(fn)
 
         if flow.version == GmxFlowVersion(1):
-            flow = convert_gmx_flow_1_to_2_new(flow, width)
+            flow = convert_gmx_flow_1_to_2(flow, args.width)
         else:
             num_already_converted += 1
 

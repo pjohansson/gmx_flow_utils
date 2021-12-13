@@ -1,8 +1,6 @@
-import copy
-
 from .gmxflow import GmxFlow, GmxFlowVersion
 
-# def convert_gmx_flow_1_to_2(data, info, width):
+
 def convert_gmx_flow_1_to_2(flow: GmxFlow, width: float) -> GmxFlow:
     """Convert flow data from 'GMX_FLOW_1' to 'GMX_FLOW_2'.
 
