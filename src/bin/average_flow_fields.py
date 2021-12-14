@@ -15,7 +15,7 @@ def get_files_from_range(args):
     """Yield files from a range along with the output destination."""
 
     def get_filename(base, i):
-        return "{}{:05d}.{}".format(base, i, args.extension)
+        return "{}{:05d}.{}".format(base, i, args.ext)
 
     def get_output(i):
         if args.output != None:
