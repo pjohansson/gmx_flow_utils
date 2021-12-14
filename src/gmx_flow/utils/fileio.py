@@ -2,16 +2,18 @@
 
 import os
 import sys
-from typing import Generator, Optional, Sequence, TextIO, Tuple, Union, List, Any
+
+from collections.abc import Generator, Sequence
+from typing import Any, TextIO
 
 Path = str
-PathWithOutput = Tuple[str, str]
+PathWithOutput = tuple[str, str]
 Paths = Sequence[str]
-PathsWithSingleOutput = Tuple[Sequence[str], str]
-GetRangePaths = Union[Path, PathWithOutput, Paths, PathsWithSingleOutput]
+PathsWithSingleOutput = tuple[Sequence[str], str]
+GetRangePaths = Path | PathWithOutput | Paths | PathsWithSingleOutput
 
 
-def get_files_or_range(input: str, **kwargs: Any) -> List[str]:
+def get_files_or_range(input: str, **kwargs: Any) -> list[str]:
     """If input is files, return as list, else return a range."""
 
     if os.path.exists(input):
@@ -22,13 +24,13 @@ def get_files_or_range(input: str, **kwargs: Any) -> List[str]:
 
 def get_files_from_range(
     *fnbase: str,
-    output_base: Optional[str] = None,
-    num_per_output: Optional[int] = None,
+    output_base: str | None = None,
+    num_per_output: int | None = None,
     begin: int = 1,
-    end: Optional[int] = None,
+    end: int | None = None,
     stride: int = 1,
     ext: str = 'dat',
-    output_ext: Optional[str] = None,
+    output_ext: str | None = None,
     no_check: bool = False,
 ) -> Generator[GetRangePaths, None, None]:
     """Yield paths to existing files with given base paths.
@@ -208,7 +210,7 @@ def get_files_from_range(
         fns = [get_filename(base, i, ext) for base in fnbase]
 
 
-def backup_file(path: str, log: Optional[TextIO] = sys.stderr):
+def backup_file(path: str, log: TextIO | None = sys.stderr):
     """Backup a file that exists at the given path using the Gromacs standard.
 
     If a file at the given path exists it is enclosed to `#` and the lowest

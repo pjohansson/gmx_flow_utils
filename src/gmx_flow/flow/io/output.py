@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Tuple, BinaryIO
+from typing import BinaryIO
 
 from ..gmxflow import GmxFlow
 
@@ -54,9 +54,9 @@ def write_flow(path: str, flow: GmxFlow):
 
 
 def pack_data(data: np.ndarray,
-              shape: Tuple[int, int],
+              shape: tuple[int, int],
               keep_inds: np.ndarray,
-              ) -> Tuple[int, List[np.ndarray]]:
+              ) -> tuple[int, list[np.ndarray]]:
     nx, ny = shape
     num_bins = np.count_nonzero(keep_inds)
 
@@ -78,9 +78,9 @@ def pack_data(data: np.ndarray,
 
 
 def _write_header(fp: BinaryIO,
-                  shape: Tuple[int, int],
-                  spacing: Tuple[float, float],
-                  origin: Tuple[float, float],
+                  shape: tuple[int, int],
+                  spacing: tuple[float, float],
+                  origin: tuple[float, float],
                   file_format: str,
                   num_elements: int,
                   ):

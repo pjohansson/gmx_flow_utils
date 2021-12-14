@@ -1,20 +1,21 @@
 """Utilities for working with `ArgumentParser` parsers."""
 
 from argparse import ArgumentParser, _ArgumentGroup, Namespace
-from typing import Optional, TypeVar, Iterable, Dict, Any, Tuple
+from collections.abc import Iterable
+from typing import Any, TypeVar
 
 # From what I understand this is the only way to declare a generic `type` variable
 # to use for the type hinting
 T = TypeVar('T')
 
 
-def parse_float_or_none(value: str) -> Optional[float]:
+def parse_float_or_none(value: str) -> float | None:
     """Return a parsed float or `None` if the input is the string 'none'."""
 
     return _parse_type_or_none(value, float)
 
 
-def _parse_type_or_none(value: str, as_type: T) -> Optional[T]:
+def _parse_type_or_none(value: str, as_type: T) -> T | None:
     """Return a parsed value or `None` if the input is the string 'none'."""
 
     if value.lower() == 'none':
@@ -26,7 +27,7 @@ def _parse_type_or_none(value: str, as_type: T) -> Optional[T]:
 def add_common_range_args(
     parser: ArgumentParser,
     begin: int = 1,
-    end: Optional[int] = None,
+    end: int | None = None,
     ext: str = 'dat',
 ) -> _ArgumentGroup:
     """Add common keyword arguments for file range specification.
@@ -58,12 +59,10 @@ def add_common_graph_args(
     title: str = '',
     xlabel: str = r'$x$',
     ylabel: str = r'$y$',
-    xlim: Tuple[Optional[float],
-                Optional[float]] = (None, None),
-    ylim: Tuple[Optional[float],
-                Optional[float]] = (None, None),
-    save: Optional[str] = None,
-    dpi: Optional[int] = None,
+    xlim: tuple[float | None, float | None] = (None, None),
+    ylim: tuple[float | None, float | None] = (None, None),
+    save: str | None = None,
+    dpi: int | None = None,
     add_axis_limits: bool = True,
     add_labels: bool = True,
     add_save: bool = True,
@@ -142,7 +141,7 @@ def get_common_range_kwargs(
     args: Namespace,
     keys: Iterable[str] = ['begin', 'end', 'ext'],
     skip: Iterable[str] = [],
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Return common keyword arguments for file range specification from parsed arguments.
 
     Keys in the `skip` list will be ignored.
@@ -167,10 +166,10 @@ def get_common_graph_kwargs(
         'colorbar',
     ],
     skip: Iterable[str] = [],
-    axis: Optional[str] = None,
+    axis: str | None = None,
     tight_layout: bool = True,
-    colorbar_label: Optional[str] = None,
-) -> Dict[str, Any]:
+    colorbar_label: str | None = None,
+) -> dict[str, Any]:
     """Return common keyword arguments for graph specification from parsed arguments.
 
     Keys in the `skip` list will be ignored.
@@ -189,7 +188,7 @@ def get_common_graph_kwargs(
 def _args_to_kwargs(args: Namespace,
                     keys: Iterable[str],
                     skip: Iterable[str] = [],
-                    ) -> Dict[str, Any]:
+                    ) -> dict[str, Any]:
     """Create a dict from a Namespace, keeping selected keys.
 
     For additional security keys can be ignored by supplying them

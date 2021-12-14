@@ -7,7 +7,10 @@ from argparse import ArgumentParser
 from gmx_flow import read_flow, write_flow, GmxFlowVersion
 from gmx_flow.flow import convert_gmx_flow_1_to_2
 from gmx_flow.utils import backup_file, get_files_from_range
-from gmx_flow.utils.argparse import add_common_range_args, get_common_range_kwargs
+from gmx_flow.utils.argparse import (
+    add_common_range_args,
+    get_common_range_kwargs,
+)
 from sys import stderr
 
 

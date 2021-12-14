@@ -2,17 +2,20 @@
 
 
 import matplotlib.pyplot as plt
-import numpy as np
 
+from collections.abc import Callable, Mapping, Sequence
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.figure import Figure
-from typing import Tuple, Optional, Mapping, Any, Sequence, Callable
+from typing import Any, Concatenate, ParamSpec
+
+
+P = ParamSpec('P')
 
 
 def decorate_graph(
-    func: Callable[[Axes, Sequence[Any]], ScalarMappable],
-) -> Callable[[Sequence[Any]], Tuple[Figure, Axes]]:
+    func: Callable[Concatenate[Axes, P], ScalarMappable],
+) -> Callable[P, tuple[Figure, Axes]]:
     """Decorator which sets up Axes for figure drawing functions.
 
     Args:
@@ -40,25 +43,25 @@ def decorate_graph(
     """
 
     def inner(
-        *func_args: Sequence[Any],
-        use_ax: Optional[Axes] = None,
+        *func_args: P.args,
+        use_ax: Axes | None = None,
         title: str = None,
         xlabel: str = None,
         ylabel: str = None,
-        xlim: Tuple[float, float] = (None, None),
-        ylim: Tuple[float, float] = (None, None),
+        xlim: tuple[float | None, float | None] = (None, None),
+        ylim: tuple[float | None, float | None] = (None, None),
         axis: str = None,
         colorbar: bool = False,
         colorbar_label: str = None,
         colorbar_axis_kwargs: Mapping[str, Any] = {},
         dpi: float = None,
         show: bool = True,
-        save: Optional[str] = None,
+        save: str | None = None,
         tight_layout: bool = False,
         transparent: bool = False,
         extra_kwargs: Mapping[str, Any] = {},
-        **func_kwargs: Mapping[str, Any],
-    ) -> Tuple[Figure, Axes]:
+        **func_kwargs: P.kwargs,
+    ) -> tuple[Figure, Axes]:
         if use_ax:
             ax = use_ax
             fig = ax.get_figure()

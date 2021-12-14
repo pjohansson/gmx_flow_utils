@@ -5,7 +5,7 @@ import textwrap
 
 from argparse import ArgumentParser
 from matplotlib.axes import Axes
-from typing import Optional, Tuple
+from matplotlib.cm import ScalarMappable
 
 from gmx_flow import read_flow, GmxFlow
 from gmx_flow.flow import supersample
@@ -20,7 +20,8 @@ from gmx_flow.utils.argparse import (
 def draw_flow(ax: Axes,
               flow: GmxFlow,
               label: str,
-              vlim: Optional[Tuple[float, float]] = None):
+              vlim: tuple[float | None, float | None] = (None, None),
+              ) -> ScalarMappable:
     xs = flow.x.ravel()
     ys = flow.y.ravel()
     values = flow.data[label].ravel()

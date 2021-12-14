@@ -1,5 +1,6 @@
 import copy
-from typing import Sequence
+
+from collections.abc import Sequence
 
 from .gmxflow import GmxFlow
 

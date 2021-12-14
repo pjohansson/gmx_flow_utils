@@ -1,15 +1,14 @@
-import copy
 import numpy as np
 
 from scipy import ndimage
-from typing import Optional, Sequence, Union
+from typing import Sequence
 
 from .gmxflow import GmxFlow
 
 
 def supersample(flow: GmxFlow,
-                N: Union[float, int],
-                labels: Optional[Sequence[str]] = None,
+                N: float | int,
+                labels: Sequence[str] | None = None,
                 xlabel: str = 'X',
                 ylabel: str = 'Y',
                 ) -> GmxFlow:

@@ -1,8 +1,7 @@
 import numpy as np
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional
 from copy import deepcopy
+from dataclasses import dataclass, field
 from enum import Enum, auto
 
 
@@ -101,28 +100,28 @@ class GmxFlow:
     data: np.ndarray = field(repr=False)
     "View of data for bins in the flow field: a numpy record with labels in `fields`"
 
-    shape: Tuple[int, int]
+    shape: tuple[int, int]
     "Number of bins along each axis in the grid"
 
-    spacing: Tuple[float, float]
+    spacing: tuple[float, float]
     "Spacing between bins in grid"
 
-    box_size: Tuple[float, float] = field(init=False)
+    box_size: tuple[float, float] = field(init=False)
     "Total size of box"
 
-    units: Dict[str, str] = field(init=False, repr=False)
+    units: dict[str, str] = field(init=False, repr=False)
     "Dictionary with physical units of each field"
 
-    descriptions: Dict[str, str] = field(init=False, repr=False)
+    descriptions: dict[str, str] = field(init=False, repr=False)
     "Dictionary with a description of each field"
 
-    fields: List[str] = field(init=False)
+    fields: list[str] = field(init=False)
     "List of all fields for the `data` record"
 
     version: GmxFlowVersion = GmxFlowVersion(2)
     "Version of flow field data format"
 
-    origin: Tuple[float, float] = (0., 0.)
+    origin: tuple[float, float] = (0., 0.)
     "Lower-left corner position of bin (0, 0)"
 
     # Field accessors
@@ -170,19 +169,19 @@ class GmxFlow:
         self.units = _get_units_dict(self.version)
         self.descriptions = _get_descriptions_dict(self.version)
 
-    def set_xlim(self, xmin: Optional[float], xmax: Optional[float]):
+    def set_xlim(self, xmin: float | None, xmax: float | None):
         """Set limits on bins along the x axis."""
 
         self.set_clim(xmin, xmax, self._xlabel)
         self._update_shape()
 
-    def set_ylim(self, ymin: Optional[float], ymax: Optional[float]):
+    def set_ylim(self, ymin: float | None, ymax: float | None):
         """Set limits on bins along the y axis."""
 
         self.set_clim(ymin, ymax, self._ylabel)
         self._update_shape()
 
-    def set_clim(self, cmin: Optional[float], cmax: Optional[float], label: str):
+    def set_clim(self, cmin: float | None, cmax: float | None, label: str):
         """Set limits on shown bins for any cutoff label.
 
         Note that this removes bins from the data. Thus we are no longer
@@ -296,7 +295,7 @@ class GmxFlow:
         self._update_box_size()
 
 
-def _get_descriptions_dict(version: GmxFlowVersion) -> Dict[str, str]:
+def _get_descriptions_dict(version: GmxFlowVersion) -> dict[str, str]:
     mass = 'Mass density' if version == GmxFlowVersion(2) else 'Total mass'
 
     return {
@@ -311,7 +310,7 @@ def _get_descriptions_dict(version: GmxFlowVersion) -> Dict[str, str]:
     }
 
 
-def _get_units_dict(version: GmxFlowVersion) -> Dict[str, str]:
+def _get_units_dict(version: GmxFlowVersion) -> dict[str, str]:
     mass = 'u/nm^3' if version == GmxFlowVersion(2) else 'u'
 
     return {
@@ -329,8 +328,8 @@ def _get_units_dict(version: GmxFlowVersion) -> Dict[str, str]:
 def _calc_shape_from_data(
     xs: np.ndarray,
     ys: np.ndarray,
-    spacing: Tuple[float, float],
-) -> Tuple[int, int]:
+    spacing: tuple[float, float],
+) -> tuple[int, int]:
     """Calculate (nx, ny) from the min/max bin positions and spacing."""
 
     def calc_along_axis(values, diff):

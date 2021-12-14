@@ -6,7 +6,6 @@ import textwrap
 
 from argparse import ArgumentParser
 from matplotlib.axes import Axes
-from typing import Tuple, Optional, Union
 
 from gmx_flow import read_flow, GmxFlow
 from gmx_flow.utils import decorate_graph
@@ -21,10 +20,10 @@ def draw_flow(
         ax: Axes,
         flow: GmxFlow,
         color_label: str,
-        arrow_color: Union[Optional[str], np.ndarray] = None,
-        scale: Optional[float] = None,
-        width: Optional[float] = None,
-        vlim: Optional[Tuple[float, float]] = None,
+        arrow_color: np.ndarray | str | None = None,
+        scale: float | None = None,
+        width: float | None = None,
+        vlim: tuple[float | None, float | None] = (None, None),
 ):
     xs = flow.x
     ys = flow.y
