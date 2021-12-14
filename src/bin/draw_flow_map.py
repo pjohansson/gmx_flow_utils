@@ -27,12 +27,7 @@ def draw_flow(ax: Axes,
     values = flow.data[label].ravel()
 
     bins = flow.shape
-
-    try:
-        vmin, vmax = vlim
-    except:
-        vmin = None
-        vmax = None
+    vmin, vmax = vlim
 
     # hist2d returns its scalar mappable data in its fourth argument,
     # which is then used to fill the colorbar mapping
