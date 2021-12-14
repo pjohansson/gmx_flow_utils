@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import matplotlib.pyplot as plt
 import numpy as np
 import textwrap
 
@@ -10,8 +9,11 @@ from matplotlib.axes import Axes
 from typing import Tuple, Optional, Union
 
 from gmx_flow import read_flow, GmxFlow
-from gmx_flow.utils.argparse import parse_float_or_none, add_common_graph_args, get_common_graph_kwargs
 from gmx_flow.utils import decorate_graph
+from gmx_flow.utils.argparse import (
+    add_common_graph_args,
+    get_common_graph_kwargs,
+)
 
 
 @decorate_graph
@@ -36,8 +38,12 @@ def draw_flow(
 
     return ax.quiver(
         *args,
-        color=arrow_color, clim=vlim, pivot='middle',
-        scale=scale, width=width)
+        color=arrow_color,
+        clim=vlim,
+        pivot='middle',
+        scale=scale,
+        width=width,
+    )
 
 
 if __name__ == '__main__':
@@ -64,37 +70,38 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('path',
-                        help="path to flow field data file")
-    parser.add_argument('-c', '--cutoff',
-                        default=None, type=float,
-                        help="remove bins with `--cutoff-label` less than this")
-    parser.add_argument('--cutoff-label',
-                        default='M', choices=['M', 'U', 'V', 'flow', 'T'],
-                        help="data label to use with `--cutoff` (default: %(default)s)")
+    parser.add_argument(
+        'path',
+        help="path to flow field data file")
+    parser.add_argument(
+        '-c', '--cutoff',
+        default=None, type=float, metavar='MIN',
+        help="remove bins with `--cutoff-label` less than this")
+    parser.add_argument(
+        '--cutoff-label',
+        default='M', choices=['M', 'U', 'V', 'flow', 'T'],
+        help="data label to use with `--cutoff` (default: %(default)s)")
 
     parser_arrows = parser.add_argument_group('arrow options')
-    parser_arrows.add_argument('-l', '--label',
-                               dest='color_label',
-                               default='flow', choices=['none', 'M', 'U', 'V', 'flow', 'T'],
-                               help='data label to color arrows with')
-    parser_arrows.add_argument('--arrow-color',
-                               default="#3182bd", type=str,
-                               help="color for arrows (if `--label` is none)")
-    parser_arrows.add_argument('--scale',
-                               default=None, type=float,
-                               help="scaling for arrows (lower -> longer arrows)")
-    parser_arrows.add_argument('--width',
-                               default=None, type=float,
-                               help="width of arrows")
-    parser_arrows.add_argument('--vlim',
-                               type=parse_float_or_none, nargs=2, metavar=('VMIN', 'VMAX'),
-                               help="limits of color axis")
+    parser_arrows.add_argument(
+        '-l', '--label',
+        dest='color_label',
+        default='flow', choices=['none', 'M', 'U', 'V', 'flow', 'T'],
+        help='data label to color arrows with')
+    parser_arrows.add_argument(
+        '--arrow-color',
+        default="#3182bd", type=str, metavar='COLOR',
+        help="color for arrows (if `--label` is none)")
+    parser_arrows.add_argument(
+        '--scale',
+        default=None, type=float,
+        help="scaling for arrows (lower -> longer arrows)")
+    parser_arrows.add_argument(
+        '--width',
+        default=None, type=float,
+        help="width of arrows")
 
-    parser_graph = add_common_graph_args(parser)
-    parser_graph.add_argument('--nocolorbar',
-                              action='store_false', dest='show_colorbar',
-                              help="do not show color bar")
+    parser_graph = add_common_graph_args(parser, add_colorbar=True)
 
     args = parser.parse_args()
 
@@ -105,18 +112,18 @@ if __name__ == '__main__':
     if args.cutoff != None:
         flow.set_clim(args.cutoff, None, args.cutoff_label)
 
-    kwargs_graph = get_common_graph_kwargs(args)
-    kwargs_graph['axis'] = 'scaled'
-    kwargs_graph['tight_layout'] = True
-
-    kwargs_cbar = {
-        'colorbar': (args.color_label != 'none') and args.show_colorbar,
-        'colorbar_label': flow.units[args.color_label],
-    }
+    kwargs_graph = get_common_graph_kwargs(
+        args,
+        axis='scaled',
+        colorbar_label=flow.units.get(args.color_label, None),
+    )
 
     draw_flow(
-        flow, args.color_label,
-        scale=args.scale, width=args.width,
-        arrow_color=args.arrow_color, vlim=args.vlim,
+        flow,
+        args.color_label,
+        scale=args.scale,
+        width=args.width,
+        arrow_color=args.arrow_color,
+        vlim=args.vlim,
         **kwargs_graph,
-        **kwargs_cbar)
+    )
