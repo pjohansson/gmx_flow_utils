@@ -20,16 +20,17 @@ def get_files_or_range(input: str, **kwargs: Any) -> List[str]:
         return list(get_files_from_range(input, **kwargs))
 
 
-def get_files_from_range(*fnbase: str,
-                         output_base: Optional[str] = None,
-                         num_per_output: Optional[int] = None,
-                         begin: int = 1,
-                         end: Optional[int] = None,
-                         stride: int = 1,
-                         ext: str = 'dat',
-                         output_ext: Optional[str] = None,
-                         no_check: bool = False,
-                         ) -> Generator[GetRangePaths, None, None]:
+def get_files_from_range(
+    *fnbase: str,
+    output_base: Optional[str] = None,
+    num_per_output: Optional[int] = None,
+    begin: int = 1,
+    end: Optional[int] = None,
+    stride: int = 1,
+    ext: str = 'dat',
+    output_ext: Optional[str] = None,
+    no_check: bool = False,
+) -> Generator[GetRangePaths, None, None]:
     """Yield paths to existing files with given base paths.
 
     Filenames are constructed using the format `{base}{:05d}.{ext}`,

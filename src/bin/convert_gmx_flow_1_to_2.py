@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-from matplotlib.pyplot import get
-import gmx_flow
-import os
+import argparse
+import textwrap
 
 from argparse import ArgumentParser
 from gmx_flow import read_flow, write_flow, GmxFlowVersion
@@ -14,7 +13,8 @@ from sys import stderr
 
 if __name__ == '__main__':
     parser = ArgumentParser(
-        description="""Convert flow field maps from `GMX_FLOW_1` to `GMX_FLOW_2`.
+        description=textwrap.dedent("""
+            Convert flow field maps from `GMX_FLOW_1` to `GMX_FLOW_2`.
 
             This changes the `M` field to hold the mass density inside bins
             instead of the total mass inside of them. To do this conversion
@@ -27,30 +27,35 @@ if __name__ == '__main__':
             origin and bin sizes. They should the in the `GMX_FLOW` file format, supported
             by the `gmx_flow` module.
 
-            """,
-        epilog="""Copyright Petter Johansson and contributors (2020).
+            """),
+        epilog=textwrap.dedent("""
+            Copyright Petter Johansson and contributors (2020).
 
             Distributed freely under the Blue Oak license
             (https://blueoakcouncil.org/license/1.0.0).
+            """),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
 
-            """)
-
-    parser.add_argument('base',
-                        type=str, metavar='BASE',
-                        help="base path for files to convert")
-    parser.add_argument('output_base',
-                        type=str, metavar='OUTBASE',
-                        help='base path for converted files')
-    parser.add_argument('width',
-                        type=float, metavar='WIDTH',
-                        help="width of 2D system, used to compute the bin volume")
+    parser.add_argument(
+        'base',
+        type=str, metavar='BASE',
+        help="base path for files to convert")
+    parser.add_argument(
+        'output_base',
+        type=str, metavar='OUTBASE',
+        help='base path for converted files')
+    parser.add_argument(
+        'width',
+        type=float, metavar='WIDTH',
+        help="width of 2D system, used to compute the bin volume")
 
     add_common_range_args(parser)
 
-    parser.add_argument('-q', '--quiet',
-                        action='store_true',
-                        help="be less loud and noisy")
-
+    parser.add_argument(
+        '-q', '--quiet',
+        action='store_true',
+        help="be less loud and noisy")
 
     args = parser.parse_args()
     kwargs_range = get_common_range_kwargs(args)

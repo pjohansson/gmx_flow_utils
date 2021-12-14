@@ -23,11 +23,12 @@ def _parse_type_or_none(value: str, as_type: T) -> Optional[T]:
         return as_type(value)
 
 
-def add_common_range_args(parser: ArgumentParser,
-                          begin: int = 1,
-                          end: Optional[int] = None,
-                          ext: str = 'dat',
-                          ) -> _ArgumentGroup:
+def add_common_range_args(
+    parser: ArgumentParser,
+    begin: int = 1,
+    end: Optional[int] = None,
+    ext: str = 'dat',
+) -> _ArgumentGroup:
     """Add common keyword arguments for file range specification.
 
     The created argument group is returned.
@@ -52,21 +53,22 @@ def add_common_range_args(parser: ArgumentParser,
     return parser_range
 
 
-def add_common_graph_args(parser: ArgumentParser,
-                          title: str = '',
-                          xlabel: str = r'$x$',
-                          ylabel: str = r'$y$',
-                          xlim: Tuple[Optional[float],
-                                      Optional[float]] = (None, None),
-                          ylim: Tuple[Optional[float],
-                                      Optional[float]] = (None, None),
-                          save: Optional[str] = None,
-                          dpi: Optional[int] = None,
-                          add_axis_limits: bool = True,
-                          add_labels: bool = True,
-                          add_save: bool = True,
-                          add_colorbar: bool = False,
-                          ) -> _ArgumentGroup:
+def add_common_graph_args(
+    parser: ArgumentParser,
+    title: str = '',
+    xlabel: str = r'$x$',
+    ylabel: str = r'$y$',
+    xlim: Tuple[Optional[float],
+                Optional[float]] = (None, None),
+    ylim: Tuple[Optional[float],
+                Optional[float]] = (None, None),
+    save: Optional[str] = None,
+    dpi: Optional[int] = None,
+    add_axis_limits: bool = True,
+    add_labels: bool = True,
+    add_save: bool = True,
+    add_colorbar: bool = False,
+) -> _ArgumentGroup:
     """Add common keyword arguments for graph specification.
 
     The created argument group is returned.
@@ -136,10 +138,11 @@ def add_common_graph_args(parser: ArgumentParser,
     return parser_graph
 
 
-def get_common_range_kwargs(args: Namespace,
-                            keys: Iterable[str] = ['begin', 'end', 'ext'],
-                            skip: Iterable[str] = [],
-                            ) -> Dict[str, Any]:
+def get_common_range_kwargs(
+    args: Namespace,
+    keys: Iterable[str] = ['begin', 'end', 'ext'],
+    skip: Iterable[str] = [],
+) -> Dict[str, Any]:
     """Return common keyword arguments for file range specification from parsed arguments.
 
     Keys in the `skip` list will be ignored.
@@ -149,24 +152,25 @@ def get_common_range_kwargs(args: Namespace,
     return _args_to_kwargs(args, keys, skip)
 
 
-def get_common_graph_kwargs(args: Namespace,
-                            keys: Iterable[str] = [
-                                'title',
-                                'xlabel',
-                                'ylabel',
-                                'xlim',
-                                'ylim',
-                                'save',
-                                'dpi',
-                                'transparent',
-                                'show',
-                                'colorbar',
-                            ],
-                            skip: Iterable[str] = [],
-                            axis: Optional[str] = None,
-                            tight_layout: bool = True,
-                            colorbar_label: Optional[str] = None,
-                            ) -> Dict[str, Any]:
+def get_common_graph_kwargs(
+    args: Namespace,
+    keys: Iterable[str] = [
+        'title',
+        'xlabel',
+        'ylabel',
+        'xlim',
+        'ylim',
+        'save',
+        'dpi',
+        'transparent',
+        'show',
+        'colorbar',
+    ],
+    skip: Iterable[str] = [],
+    axis: Optional[str] = None,
+    tight_layout: bool = True,
+    colorbar_label: Optional[str] = None,
+) -> Dict[str, Any]:
     """Return common keyword arguments for graph specification from parsed arguments.
 
     Keys in the `skip` list will be ignored.

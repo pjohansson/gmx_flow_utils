@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
+import textwrap
+
 from argparse import ArgumentParser
 
 from gmx_flow import read_flow, write_flow
@@ -73,33 +76,46 @@ def print_file_info(files, fnout, verbosity_level):
 
 if __name__ == '__main__':
     parser = ArgumentParser(
-        description="""Average flow field files.
+        description=textwrap.dedent("""
+            Average flow field files.
 
-            All flow fields must have the same grid shape and are also assumed to share
-            origin and bin sizes. They should the in the `GMX_FLOW` file format, supported
-            by the `gmx_flow` module.
-            """,
-        epilog="""Copyright Petter Johansson and contributors (2020).
+            All flow fields must have the same grid shape
+            and are also assumed to share origin and bin sizes.
+            They should the in the `GMX_FLOW` file format,
+            supported by the `gmx_flow` module.
+            """),
+        epilog=textwrap.dedent("""
+            Copyright Petter Johansson and contributors (2020).
 
             Distributed freely under the Blue Oak license
             (https://blueoakcouncil.org/license/1.0.0).
-            """)
+            """),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
-    subparsers = parser.add_subparsers(dest='subcommand', required=True,
-                                       title='subcommands',
-                                       description='Sub-commands for input file selection.')
+    subparsers = parser.add_subparsers(
+        dest='subcommand', required=True,
+        title='subcommands',
+        description='Sub-commands for input file selection.')
 
-    parser_files = subparsers.add_parser('files',
-                                         description="""Average a given set of flow field files and write to a new file.
-            """,
-                                         help='average a list of flow field files')
-    parser_files.add_argument('files', type=str, nargs='+',
-                              help='list of flow field files to average')
+    parser_files = subparsers.add_parser(
+        'files',
+        description="Average a given set of flow field files.",
+        help='average a list of flow field files',
+    )
     parser_files.add_argument(
-        'output', type=str, help='file to write average into')
+        'files', type=str, nargs='+',
+        help='list of flow field files to average',
+    )
+    parser_files.add_argument(
+        'output', type=str,
+        help='file to write average into',
+    )
 
-    parser_range = subparsers.add_parser('range',
-                                         description="""Average a sequential range of flow field files.
+    parser_range = subparsers.add_parser(
+        'range',
+        description=textwrap.dedent("""
+            Average a sequential range of flow field files.
 
             Files are assumed to have paths of the format '{}{:05d}.dat',
             i.e. 'flow_00001.dat', 'flow_00002.dat', etc. The script looks for all matching
@@ -119,31 +135,52 @@ if __name__ == '__main__':
                 ['flow_00006.dat', 'flow_00007.dat', ..., 'flow_00010.dat'] -> 'avg_00002.dat'
                 ['flow_00011.dat', 'flow_00015.dat', ..., 'flow_00015.dat'] -> 'avg_00003.dat'
                 ['flow_00016.dat', 'flow_00020.dat', ..., 'flow_00020.dat'] -> 'avg_00004.dat'
+            """),
+        help=r"average a sequential list "
+             r"('flow_00001.dat', 'flow_00002.dat', ...)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
-            """,
-                                         help='average a sequential range of flow field files (\'flow_00001.dat\', \'flow_00002.dat\', ...)')
-
-    parser_range.add_argument('base', type=str, help='base of input files')
-    parser_range.add_argument('outbase', type=str, nargs='?',
-                              help='base of output files (unless \'-o\' is supplied)')
-    parser_range.add_argument('-o', '--output', type=str, default=None, metavar='PATH',
-                              help='write the averaged data into this file (replaces \'outbase\')')
-    parser_range.add_argument('-n', '--num', type=int, default=None, metavar='INT',
-                              help='number of files to average over (default: all files in range)')
-    parser_range.add_argument('-b', '--begin', type=int, default=1, metavar='INT',
-                              help='index of first file to read (default: %(default)s)')
-    parser_range.add_argument('-e', '--end', type=int, default=None, metavar='INT',
-                              help='index of last file to read (default: inf)')
-    parser_range.add_argument('--extension', type=str, default='dat', metavar='EXT',
-                              help='extension for files (default: %(default)s)')
+    parser_range.add_argument(
+        'base',
+        type=str,
+        help='base of input files')
+    parser_range.add_argument(
+        'outbase',
+        type=str, nargs='?',
+        help='base of output files (unless \'-o\' is supplied)')
+    parser_range.add_argument(
+        '-o', '--output',
+        type=str, default=None, metavar='PATH',
+        help='write the averaged data into this file (replaces \'outbase\')')
+    parser_range.add_argument(
+        '-n', '--num',
+        type=int, default=None, metavar='INT',
+        help='number of files to average over (default: all files in range)')
+    parser_range.add_argument(
+        '-b', '--begin',
+        type=int, default=1, metavar='INT',
+        help='index of first file to read (default: %(default)s)')
+    parser_range.add_argument(
+        '-e', '--end',
+        type=int, default=None, metavar='INT',
+        help='index of last file to read (default: inf)')
+    parser_range.add_argument(
+        '--ext',
+        type=str, default='dat', metavar='EXT',
+        help='extension for files (default: %(default)s)')
 
     parser_files.set_defaults(get_filenames=get_files_from_list)
     parser_range.set_defaults(get_filenames=get_files_from_range)
 
     parser_files.add_argument(
-        '-v', '--verbose', action='count', help='be loud and noisy')
+        '-v', '--verbose',
+        action='count',
+        help='be loud and noisy')
     parser_range.add_argument(
-        '-v', '--verbose', action='count', help='be loud and noisy')
+        '-v', '--verbose',
+        action='count',
+        help='be loud and noisy')
 
     args = parser.parse_args()
 

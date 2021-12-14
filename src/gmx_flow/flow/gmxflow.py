@@ -326,10 +326,11 @@ def _get_units_dict(version: GmxFlowVersion) -> Dict[str, str]:
     }
 
 
-def _calc_shape_from_data(xs: np.ndarray,
-                          ys: np.ndarray,
-                          spacing: Tuple[float, float],
-                          ) -> Tuple[int, int]:
+def _calc_shape_from_data(
+    xs: np.ndarray,
+    ys: np.ndarray,
+    spacing: Tuple[float, float],
+) -> Tuple[int, int]:
     """Calculate (nx, ny) from the min/max bin positions and spacing."""
 
     def calc_along_axis(values, diff):

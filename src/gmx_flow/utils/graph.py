@@ -10,8 +10,9 @@ from matplotlib.figure import Figure
 from typing import Tuple, Optional, Mapping, Any, Sequence, Callable
 
 
-def decorate_graph(func: Callable[[Axes, Sequence[Any]], ScalarMappable],
-                   ) -> Callable[[Sequence[Any]], Tuple[Figure, Axes]]:
+def decorate_graph(
+    func: Callable[[Axes, Sequence[Any]], ScalarMappable],
+) -> Callable[[Sequence[Any]], Tuple[Figure, Axes]]:
     """Decorator which sets up Axes for figure drawing functions.
 
     Args:
@@ -39,24 +40,24 @@ def decorate_graph(func: Callable[[Axes, Sequence[Any]], ScalarMappable],
     """
 
     def inner(
-            *func_args: Sequence[Any],
-            use_ax: Optional[Axes] = None,
-            title: str = None,
-            xlabel: str = None,
-            ylabel: str = None,
-            xlim: Tuple[float, float] = (None, None),
-            ylim: Tuple[float, float] = (None, None),
-            axis: str = None,
-            colorbar: bool = False,
-            colorbar_label: str = None,
-            colorbar_axis_kwargs: Mapping[str, Any] = {},
-            dpi: float = None,
-            show: bool = True,
-            save: Optional[str] = None,
-            tight_layout: bool = False,
-            transparent: bool = False,
-            extra_kwargs: Mapping[str, Any] = {},
-            **func_kwargs: Mapping[str, Any],
+        *func_args: Sequence[Any],
+        use_ax: Optional[Axes] = None,
+        title: str = None,
+        xlabel: str = None,
+        ylabel: str = None,
+        xlim: Tuple[float, float] = (None, None),
+        ylim: Tuple[float, float] = (None, None),
+        axis: str = None,
+        colorbar: bool = False,
+        colorbar_label: str = None,
+        colorbar_axis_kwargs: Mapping[str, Any] = {},
+        dpi: float = None,
+        show: bool = True,
+        save: Optional[str] = None,
+        tight_layout: bool = False,
+        transparent: bool = False,
+        extra_kwargs: Mapping[str, Any] = {},
+        **func_kwargs: Mapping[str, Any],
     ) -> Tuple[Figure, Axes]:
         if use_ax:
             ax = use_ax
@@ -96,12 +97,13 @@ def decorate_graph(func: Callable[[Axes, Sequence[Any]], ScalarMappable],
     return inner
 
 
-def _add_colorbar_axis(ax: Axes,
-                       position: str = "right",
-                       size: str = "8%",
-                       pad: float = 0.10,
-                       **kwargs: Mapping[str, Any],
-                       ) -> Axes:
+def _add_colorbar_axis(
+    ax: Axes,
+    position: str = "right",
+    size: str = "8%",
+    pad: float = 0.10,
+    **kwargs: Mapping[str, Any],
+) -> Axes:
     """Add and return a colorbar `Axes` besides the input `Axes`."""
 
     from mpl_toolkits.axes_grid1 import make_axes_locatable
