@@ -170,6 +170,9 @@ if __name__ == '__main__':
         type=str, default='dat', metavar='EXT',
         help='extension for files (default: %(default)s)')
 
+    # set the function used to get the filenames depending on
+    # which subparser is selected at runtime. there's probably
+    # a better way to check for this. TODO: find it
     parser_files.set_defaults(get_filenames=get_files_from_list)
     parser_range.set_defaults(get_filenames=get_files_from_range)
 
@@ -184,6 +187,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # see above comment
     for files, fnout in args.get_filenames(args):
         if files != []:
             if args.verbose != None and args.verbose > 0:
