@@ -3,7 +3,7 @@
 
 import matplotlib.pyplot as plt
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.figure import Figure
