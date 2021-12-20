@@ -7,10 +7,13 @@ from collections.abc import Callable, Generator, Iterable, Sequence
 from sys import stderr
 from typing import Any, TextIO, TypeVar
 
+# different return types from `get_files_from_range`
 Path = str
 PathWithOutput = tuple[str, str]
 Paths = Sequence[str]
 PathsWithSingleOutput = tuple[Sequence[str], str]
+
+# combined return type
 GetRangePaths = Path | PathWithOutput | Paths | PathsWithSingleOutput
 
 
@@ -321,9 +324,9 @@ def loop_items(items: Iterable[Item],
     Output (stderr):
 
     ```
-    [1/3]
-    [2/3]
-    [3/3]
+    (1/3)
+    (2/3)
+    (3/3)
     # Newlines added between each item for emphasis.
     ```
 
@@ -340,9 +343,9 @@ def loop_items(items: Iterable[Item],
     Output (stderr):
 
     ```
-    [1/3] one
-    [2/3] two
-    [3/3] three
+    (1/3) one
+    (2/3) two
+    (3/3) three
     ```
 
     Or in uppercase (or whatever other function you can supply
@@ -356,9 +359,9 @@ def loop_items(items: Iterable[Item],
     Output (stderr):
 
     ```
-    [1/3] ONE
-    [2/3] TWO
-    [3/3] THREE
+    (1/3) ONE
+    (2/3) TWO
+    (3/3) THREE
     ```
 
     """
@@ -369,7 +372,7 @@ def loop_items(items: Iterable[Item],
 
     for i, item in enumerate(items):
         if not quiet:
-            fp.write(f"\r[{i + 1:{width}}/{num_total}] ")
+            fp.write(f"\r({i + 1:{width}}/{num_total}) ")
 
             if formatter != None:
                 fp.write(f"{formatter(item)} ")
