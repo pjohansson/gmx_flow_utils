@@ -30,6 +30,7 @@ def add_common_range_args(
     begin: int = 1,
     end: int | None = None,
     ext: str = 'dat',
+    add_backup: bool = False,
 ) -> _ArgumentGroup:
     """Add common keyword arguments for file range specification.
 
@@ -59,6 +60,13 @@ def add_common_range_args(
         '--ext',
         type=str, default=ext,
         help='extension for files (default: %(default)s)')
+
+    if add_backup:
+        parser_range.add_argument(
+            '--nobackup',
+            action='store_false', dest='backup',
+            help="overwrite existing files without backing them up"
+        )
 
     return parser_range
 
