@@ -26,17 +26,26 @@ def _parse_type_or_none(value: str, as_type: T) -> T | None:
 
 def add_common_range_args(
     parser: ArgumentParser,
+    use_group: _ArgumentGroup | None = None,
     begin: int = 1,
     end: int | None = None,
     ext: str = 'dat',
 ) -> _ArgumentGroup:
     """Add common keyword arguments for file range specification.
 
+    By default the new group is created by calling the `add_argument_group`
+    method to the given `parser`. They can instead be added to a given
+    group by supplying one with `use_group`. If so, no new argument group
+    is created.
+
     The created argument group is returned.
 
     """
 
-    parser_range = parser.add_argument_group('range options')
+    if use_group is None:
+        parser_range = parser.add_argument_group('range options')
+    else:
+        parser_range = use_group
 
     parser_range.add_argument(
         '-b', '--begin',
@@ -55,7 +64,8 @@ def add_common_range_args(
 
 
 def add_common_graph_args(
-    parser: ArgumentParser,
+    parser: ArgumentParser | None,
+    use_group: _ArgumentGroup | None = None,
     title: str = '',
     xlabel: str = r'$x$',
     ylabel: str = r'$y$',
@@ -71,11 +81,19 @@ def add_common_graph_args(
 ) -> _ArgumentGroup:
     """Add common keyword arguments for graph specification.
 
+    By default the new group is created by calling the `add_argument_group`
+    method to the given `parser`. They can instead be added to a given
+    group by supplying one with `use_group`. If so, no new argument group
+    is created.
+
     The created argument group is returned.
 
     """
 
-    parser_graph = parser.add_argument_group('graph options')
+    if use_group is None:
+        parser_graph = parser.add_argument_group('graph options')
+    else:
+        parser_graph = use_group
 
     if add_labels:
         parser_graph.add_argument(
