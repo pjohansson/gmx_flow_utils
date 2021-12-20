@@ -3,8 +3,9 @@
 import os
 import sys
 
-from collections.abc import Generator, Sequence
-from typing import Any, TextIO
+from collections.abc import Callable, Generator, Iterable, Sequence
+from sys import stderr
+from typing import Any, TextIO, TypeVar
 
 Path = str
 PathWithOutput = tuple[str, str]
@@ -269,3 +270,113 @@ def backup_file(path: str, log: TextIO | None = sys.stderr):
             log.write("backed up '{}' to '{}'\n".format(path, to_path))
 
         os.rename(path, to_path)
+
+
+# used only as a generic, but fixed, variable in the following function
+Item = TypeVar('Item')
+
+
+def loop_items(items: Iterable[Item],
+               formatter: Callable[[Item], str] | None = None,
+               fp: TextIO = stderr,
+               quiet: bool = False,
+               ) -> Generator[Item, None, None]:
+    """Loop through and yield items from a set, while printing information.
+
+    This function is used to easily write CLI tools which work with sets
+    of files, and it is useful to print how much of the work has been done.
+
+    The printed information is each item's index in the set and total
+    size of the set. By supplying a function with `formatter`, additional
+    information about each item can be appended to the indexing.
+
+    Each line is preceeded with a carriage return (`\r`), so that all items are
+    printed into a single terminal line. After finishing the loop a newline
+    (`\n`) is printed.
+
+    By default information is printed into `stderr`. This can be changed
+    by supplying another location with `fp`. The printing can be disabled
+    with `quiet=True`.
+
+
+    # Errors
+
+    If `items` is an infinite generator, the call to calculate its length
+    cannot finish. Your machine will run out of memory or crash.
+
+
+    # Examples
+
+    ## Simple loop
+
+    Print progress through a set (newlines added between
+    each item for emphasis):
+
+    ```
+    items = ['one', 'two', 'three']
+    for item in loop_items(items):
+        # do something with each item
+    ```
+
+    Output (stderr):
+
+    ```
+    [1/3]
+    [2/3]
+    [3/3]
+    # Newlines added between each item for emphasis.
+    ```
+
+    ## Formatting each item
+
+    Also print the item as a regular string.
+
+    ```
+    items = ['one', 'two', 'three']
+    for item in loop_items(items, formatter=str):
+        # do something with each item
+    ```
+
+    Output (stderr):
+
+    ```
+    [1/3] one
+    [2/3] two
+    [3/3] three
+    ```
+
+    Or in uppercase (or whatever other function you can supply
+    that takes the type of item, which can be anything, as an input).
+
+    ```
+    for item in loop_items(items, formatter=str.upper):
+        # do something with each item
+    ```
+
+    Output (stderr):
+
+    ```
+    [1/3] ONE
+    [2/3] TWO
+    [3/3] THREE
+    ```
+
+    """
+
+    items = list(items)
+    num_total = len(list(items))
+    width = len(str(num_total))
+
+    for i, item in enumerate(items):
+        if not quiet:
+            fp.write(f"\r[{i + 1:{width}}/{num_total}] ")
+
+            if formatter != None:
+                fp.write(f"{formatter(item)} ")
+
+        yield item
+
+    if not quiet:
+        fp.write("\n")
+
+    return None
