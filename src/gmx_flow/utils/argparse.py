@@ -61,6 +61,7 @@ def add_common_graph_args(
     ylabel: str = r'$y$',
     xlim: tuple[float | None, float | None] = (None, None),
     ylim: tuple[float | None, float | None] = (None, None),
+    vlim: tuple[float | None, float | None] = (None, None),
     save: str | None = None,
     dpi: int | None = None,
     add_axis_limits: bool = True,
@@ -105,7 +106,8 @@ def add_common_graph_args(
     if add_colorbar:
         parser_graph.add_argument(
             '--vlim',
-            type=parse_float_or_none, nargs=2, metavar=('VMIN', 'VMAX'),
+            type=parse_float_or_none, default=vlim,
+            nargs=2, metavar=('VMIN', 'VMAX'),
             help="limits of color bar values")
 
     if add_save:
