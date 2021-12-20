@@ -286,7 +286,7 @@ def loop_items(items: Iterable[Item],
                quiet: bool = False,
                num_items_max: int = 500_000,
                ) -> Generator[Item, None, None]:
-    """Loop through and yield items from a set, while printing information.
+    r"""Loop through and yield items from a set, while printing information.
 
     This function is used to easily write CLI tools which work with sets
     of files, and it is useful to print how much of the work has been done.
