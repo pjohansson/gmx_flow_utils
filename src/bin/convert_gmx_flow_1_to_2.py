@@ -4,14 +4,20 @@ import argparse
 import textwrap
 
 from argparse import ArgumentParser
+from sys import stderr
+
 from gmx_flow import read_flow, write_flow, GmxFlowVersion
 from gmx_flow.flow import convert_gmx_flow_1_to_2
-from gmx_flow.utils import backup_file, get_files_from_range
+from gmx_flow.utils import backup_file, get_files_from_range, loop_items
 from gmx_flow.utils.argparse import (
     add_common_range_args,
     get_common_range_kwargs,
 )
-from sys import stderr
+
+
+def print_item(fn_tuple: tuple[str, str]) -> str:
+    fn, fnout = fn_tuple
+    return f"{fn} -> {fnout} "
 
 
 if __name__ == '__main__':
@@ -53,7 +59,7 @@ if __name__ == '__main__':
         type=float, metavar='WIDTH',
         help="width of 2D system, used to compute the bin volume")
 
-    add_common_range_args(parser)
+    add_common_range_args(parser, add_backup=True)
 
     parser.add_argument(
         '-q', '--quiet',
@@ -66,10 +72,14 @@ if __name__ == '__main__':
     num_files = 0
     num_already_converted = 0
 
-    for fn, fnout in get_files_from_range(
-            args.base,
-            output_base=args.output_base,
-            **kwargs_range):
+    fn_tuples = get_files_from_range(
+        args.base,
+        output_base=args.output_base,
+        **kwargs_range)
+
+    for fn, fnout in loop_items(fn_tuples,
+                                quiet=args.quiet,
+                                formatter=print_item):
         flow = read_flow(fn)
 
         if flow.version == GmxFlowVersion(1):
@@ -77,7 +87,9 @@ if __name__ == '__main__':
         else:
             num_already_converted += 1
 
-        backup_file(fnout)
+        if args.backup:
+            backup_file(fnout)
+
         write_flow(fnout, flow)
 
         num_files += 1

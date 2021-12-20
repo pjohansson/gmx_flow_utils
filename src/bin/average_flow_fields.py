@@ -5,13 +5,12 @@ import os
 import textwrap
 
 from argparse import ArgumentParser
-from typing import TextIO
-from sys import stderr
+from collections.abc import Callable, Sequence
 
 from gmx_flow import read_flow, write_flow
 from gmx_flow.flow import average_data
-from gmx_flow.utils import backup_file
-from gmx_flow.utils.argparse import add_common_range_args, get_common_range_kwargs
+from gmx_flow.utils import backup_file, loop_items
+from gmx_flow.utils.argparse import add_common_range_args
 
 
 def get_files_from_range(args):
@@ -58,26 +57,23 @@ def get_files_from_list(args):
     yield args.files, args.output
 
 
-def print_file_info(fp: TextIO,
-                    files: list[str],
-                    fnout: str,
-                    verbosity_level: int,
-                    ):
-    """Print information about the averaging to the given file pointer."""
+def get_formatter(verbose: bool) -> Callable[[Sequence[str], str], str]:
+    def inner(input: tuple[Sequence[str], str]) -> str:
+        files, fnout = input
 
-    if len(files) == 1:
-        fp.write(f"['{files[0]}'] -> '{fnout}'")
-    elif len(files) == 2:
-        fp.write(f"['{files[0]}', '{files[1]}'] -> '{fnout}'")
-    elif len(files) > 2:
-        if verbosity_level == 1:
-            file_list = "'{}', ..., '{}'".format(files[0], files[-1])
-        elif verbosity_level > 1:
-            file_list = ', '.join(files)
+        if len(files) == 1:
+            return f"['{files[0]}'] -> '{fnout}'"
+        elif len(files) == 2:
+            return f"['{files[0]}', '{files[1]}'] -> '{fnout}'"
+        elif len(files) > 2:
+            if verbose:
+                file_list = ', '.join(files)
+            else:
+                file_list = "'{}', ..., '{}'".format(files[0], files[-1])
 
-        fp.write(f"[{file_list}] -> '{fnout}'")
+            return f"[{file_list}] -> '{fnout}'"
 
-    fp.write(" ")
+    return inner
 
 
 if __name__ == '__main__':
@@ -164,7 +160,7 @@ if __name__ == '__main__':
         type=int, default=None, metavar='INT',
         help='number of files to average over (default: all files in range)')
 
-    add_common_range_args(parser=None, use_group=parser_range)
+    add_common_range_args(parser=None, use_group=parser_range, add_backup=True)
 
     # set the function used to get the filenames depending on
     # which subparser is selected at runtime. there's probably
@@ -174,11 +170,15 @@ if __name__ == '__main__':
 
     parser_files.add_argument(
         '-v', '--verbose',
-        action='count',
+        action='store_true',
         help='print averaged file information')
+    parser_files.add_argument(
+        '-q', '--quiet',
+        action='store_true',
+        help='do not print anything')
     parser_range.add_argument(
         '-v', '--verbose',
-        action='count',
+        action='store_true',
         help='print averaged file information')
     parser_range.add_argument(
         '-q', '--quiet',
@@ -187,27 +187,17 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    fns_tuple = list(args.get_filenames(args))
-    num_total = len(fns_tuple)
-    width = len(str(num_total))
+    f = get_formatter(args.verbose)
 
     # see above comment
-    for i, (files, fnout) in enumerate(fns_tuple):
-        if not args.quiet:
-            stderr.write(f"{i + 1:{width}}/{num_total:{width}} ")
+    fns_generator = args.get_filenames(args)
 
+    for files, fnout in loop_items(fns_generator, formatter=f, quiet=args.quiet):
         if files != []:
-            if args.verbose != None and args.verbose > 0:
-                print_file_info(stderr, files, fnout, args.verbose)
-
             flow_fields = [read_flow(fn) for fn in files]
             avg_flow = average_data(flow_fields)
 
-            backup_file(fnout)
+            if args.backup:
+                backup_file(fnout)
+
             write_flow(fnout, avg_flow)
-
-        if not args.quiet:
-            stderr.write("\r")
-
-    if not args.quiet:
-        stderr.write("\n")
