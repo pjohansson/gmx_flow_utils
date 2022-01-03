@@ -1,5 +1,6 @@
 """File parsing and backup utilities."""
 
+import itertools
 import os
 import sys
 
@@ -283,6 +284,7 @@ def loop_items(items: Iterable[Item],
                formatter: Callable[[Item], str] | None = None,
                fp: TextIO = stderr,
                quiet: bool = False,
+               num_items_max: int = 500_000,
                ) -> Generator[Item, None, None]:
     """Loop through and yield items from a set, while printing information.
 
@@ -302,10 +304,11 @@ def loop_items(items: Iterable[Item],
     with `quiet=True`.
 
 
-    # Errors
+    # Note
 
-    If `items` is an infinite generator, the call to calculate its length
-    cannot finish. Your machine will run out of memory or crash.
+    * By default a maximum of `num_items_max` values are yielded. This is to
+    avoid infinite memory allocations if, for example, an infinite iterator
+    is given as input.
 
 
     # Examples
@@ -366,8 +369,9 @@ def loop_items(items: Iterable[Item],
 
     """
 
-    items = list(items)
-    num_total = len(list(items))
+    items = list(itertools.islice(items, num_items_max))
+
+    num_total = len(items)
     width = len(str(num_total))
 
     for i, item in enumerate(items):
