@@ -83,10 +83,12 @@ def add_common_graph_args(
     save: str | None = None,
     dpi: int | None = None,
     colormap: str = 'viridis',
+    linewidth: float | None = None,
     add_axis_limits: bool = True,
     add_labels: bool = True,
     add_save: bool = True,
     add_colormap: bool = False,
+    add_line: bool = False,
 ) -> _ArgumentGroup:
     """Add common keyword arguments for graph specification.
 
@@ -138,6 +140,13 @@ def add_common_graph_args(
             type=parse_float_or_none, default=vlim,
             nargs=2, metavar=('VMIN', 'VMAX'),
             help="limits of color bar values")
+
+    if add_line:
+        parser_graph.add_argument(
+            '--linewidth',
+            type=parse_float_or_none, default=linewidth,
+            metavar='WIDTH',
+            help="width of plotted line")
 
     if add_save:
         parser_graph.add_argument(
