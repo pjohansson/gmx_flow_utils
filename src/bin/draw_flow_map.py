@@ -20,6 +20,7 @@ from gmx_flow.utils.argparse import (
 def draw_flow(ax: Axes,
               flow: GmxFlow,
               label: str,
+              colormap: str,
               vlim: tuple[float | None, float | None] = (None, None),
               ) -> ScalarMappable:
     xs = flow.x.ravel()
@@ -34,7 +35,9 @@ def draw_flow(ax: Axes,
     _, _, _, sm = ax.hist2d(
         xs, ys,
         weights=values, bins=bins,
-        vmin=vmin, vmax=vmax)
+        vmin=vmin, vmax=vmax,
+        cmap=colormap,
+    )
 
     return sm
 
@@ -83,7 +86,7 @@ if __name__ == '__main__':
         default=1, type=int, metavar='N',
         help="supersample data by a given factor")
 
-    parser_graph = add_common_graph_args(parser, add_colorbar=True)
+    parser_graph = add_common_graph_args(parser, add_colormap=True)
 
     args = parser.parse_args()
 
@@ -107,6 +110,7 @@ if __name__ == '__main__':
 
     draw_flow(flow,
               args.label,
+              colormap=args.colormap,
               vlim=args.vlim,
               **kwargs_graph,
               )

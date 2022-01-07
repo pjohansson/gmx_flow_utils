@@ -20,6 +20,7 @@ def draw_flow(
         ax: Axes,
         flow: GmxFlow,
         color_label: str,
+        colormap: str,
         arrow_color: np.ndarray | str | None = None,
         scale: float | None = None,
         width: float | None = None,
@@ -39,6 +40,7 @@ def draw_flow(
         *args,
         color=arrow_color,
         clim=vlim,
+        cmap=colormap,
         pivot='middle',
         scale=scale,
         width=width,
@@ -100,7 +102,7 @@ if __name__ == '__main__':
         default=None, type=float,
         help="width of arrows")
 
-    parser_graph = add_common_graph_args(parser, add_colorbar=True)
+    parser_graph = add_common_graph_args(parser, add_colormap=True)
 
     args = parser.parse_args()
 
@@ -123,6 +125,7 @@ if __name__ == '__main__':
         scale=args.scale,
         width=args.width,
         arrow_color=args.arrow_color,
+        colormap=args.colormap,
         vlim=args.vlim,
         **kwargs_graph,
     )

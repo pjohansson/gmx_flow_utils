@@ -82,10 +82,11 @@ def add_common_graph_args(
     vlim: tuple[float | None, float | None] = (None, None),
     save: str | None = None,
     dpi: int | None = None,
+    colormap: str = 'viridis',
     add_axis_limits: bool = True,
     add_labels: bool = True,
     add_save: bool = True,
-    add_colorbar: bool = False,
+    add_colormap: bool = False,
 ) -> _ArgumentGroup:
     """Add common keyword arguments for graph specification.
 
@@ -97,6 +98,8 @@ def add_common_graph_args(
     The created argument group is returned.
 
     """
+
+    import matplotlib.pyplot as plt
 
     if use_group is None:
         parser_graph = parser.add_argument_group('graph options')
@@ -129,7 +132,7 @@ def add_common_graph_args(
             nargs=2, metavar=('YMIN', 'YMAX'),
             help="graph limits along y axis")
 
-    if add_colorbar:
+    if add_colormap:
         parser_graph.add_argument(
             '--vlim',
             type=parse_float_or_none, default=vlim,
@@ -150,7 +153,11 @@ def add_common_graph_args(
             action='store_true',
             help="save figure with transparent background")
 
-    if add_colorbar:
+    if add_colormap:
+        parser_graph.add_argument(
+            '--colormap',
+            default=colormap, metavar='CMAP', choices=plt.colormaps(),
+            help="colormap for data (default: %(default)s)")
         parser_graph.add_argument(
             '--nocolorbar',
             action='store_false',
@@ -199,6 +206,10 @@ def get_common_graph_kwargs(
     colorbar_label: str | None = None,
 ) -> dict[str, Any]:
     """Return common keyword arguments for graph specification from parsed arguments.
+
+    By default only the keyword arguments which are consumed by `decorate_graph`
+    are included. This excludes arguments like `colormap` and `vlim` since
+    they are often used directly when drawing the graph.
 
     Keys in the `skip` list will be ignored.
 
