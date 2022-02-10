@@ -29,3 +29,19 @@ def test_read_gmx_flow_is_consistent_with_read_data():
 
     for key in reference_data.dtype.names:
         assert np.array_equal(flow.data[key], reference_data[key])
+
+
+def test_reading_file_with_gz_extension_extracts_with_gunzip():
+    fn_unzip = os.path.join(FIXTURE_DIR, 'flow_field0.dat')
+    fn_gzip = os.path.join(FIXTURE_DIR, 'flow_field0.dat.gz')
+
+    data_gzip, info_gzip = _read_data(fn_gzip)
+    data_unzip, info_unzip = _read_data(fn_unzip)
+
+    assert data_unzip.keys() == data_gzip.keys()
+    for vals_unzip, vals_gzip in zip(data_unzip, data_gzip):
+        assert np.array_equal(vals_unzip, vals_gzip)
+
+    assert info_unzip.keys() == info_gzip.keys()
+    for head_unzip, head_gzip in zip(info_unzip, info_gzip):
+        assert head_unzip == head_gzip

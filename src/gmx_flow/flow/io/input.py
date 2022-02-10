@@ -1,7 +1,8 @@
+import gzip
 import numpy as np
+import os
 
 from collections.abc import Sequence
-from typing import BinaryIO
 
 from ..gmxflow import GmxFlow, GmxFlowVersion
 
@@ -72,6 +73,9 @@ def _read_data(filename: str) -> tuple[dict[str, np.ndarray], dict[str, str]]:
 
     The `x` and `y` coordinates are bin center positions, not corner.
 
+    If the given filename has the extension '.gz' the file is assumed
+    to be compressed with gzip. It will be decompressed before reading.
+
     Args:
         filename (str): A file to read data from.
 
@@ -80,9 +84,30 @@ def _read_data(filename: str) -> tuple[dict[str, np.ndarray], dict[str, str]]:
 
     """
 
-    with open(filename, 'rb') as fp:
-        fields, num_values, info = _read_header(fp)
-        data = _read_values(fp, num_values, fields)
+    def read_file(filename: str, mode: str) -> bytes:
+        _, ext = os.path.splitext(filename)
+        assume_gzip = ext == '.gz'
+
+        if assume_gzip:
+            fp = gzip.open(filename, mode)
+        else:
+            fp = open(filename, mode)
+
+        return fp.read()
+
+    def split_file_into_header_and_data(
+            content: bytes,
+            sep: bytes = b'\0',
+    ) -> tuple[bytes, bytes]:
+        header, _, data = content.partition(sep)
+
+        return header, data
+
+    content = read_file(filename, 'rb')
+    header_bytes, data_bytes = split_file_into_header_and_data(content)
+
+    fields, num_values, info = _read_header(header_bytes)
+    data = _read_values(data_bytes, num_values, fields)
 
     x0, y0 = info['origin']
     nx, ny = info['shape']
@@ -104,7 +129,7 @@ def _read_data(filename: str) -> tuple[dict[str, np.ndarray], dict[str, str]]:
     return {l: grid[l] for l in __FIELDS}, info
 
 
-def _read_values(fp: BinaryIO,
+def _read_values(content: bytes,
                  num_values: int,
                  fields: Sequence[str],
                  ) -> dict[str, np.ndarray]:
@@ -120,13 +145,25 @@ def _read_values(fp: BinaryIO,
         'V': np.float32,
     }
 
-    return {
-        l: np.fromfile(fp, dtype=dtypes[l], count=num_values)
-        for l in fields
-    }
+    offset = 0
+    data = {}
+
+    for label in fields:
+        dtype = dtypes[label]
+
+        data[label] = np.frombuffer(
+            content,
+            count=num_values,
+            offset=offset,
+            dtype=dtype,
+        )
+
+        offset += num_values * np.dtype(dtype).itemsize
+
+    return data
 
 
-def _read_header(fp: BinaryIO) -> tuple[list[str], int, dict[str, str]]:
+def _read_header(content: bytes) -> tuple[list[str], int, dict[str, str]]:
     """Read header information and forward the pointer to the data."""
 
     def read_shape(line):
@@ -144,27 +181,8 @@ def _read_header(fp: BinaryIO) -> tuple[list[str], int, dict[str, str]]:
     def parse_field_labels(line):
         return line.split()[1:]
 
-    def read_header_string(fp):
-        buf_size = 1024
-        header_str = ""
-
-        while True:
-            buf = fp.read(buf_size)
-
-            pos = buf.find(b'\0')
-
-            if pos != -1:
-                header_str += buf[:pos].decode("ascii")
-                offset = buf_size - pos - 1
-                fp.seek(-offset, 1)
-                break
-            else:
-                header_str += buf.decode("ascii")
-
-        return header_str
-
     info = {}
-    header_str = read_header_string(fp)
+    header_str = content.decode('ascii')
 
     for line in header_str.splitlines():
         line_type = line.split(maxsplit=1)[0].upper()
