@@ -10,8 +10,11 @@ FIXTURE_DIR = os.path.join(
     'test_files',
 )
 
+# Setup a fixture which copies files into a temporary directory,
+# for when we want to write to that same directory for tests
 FILES = pytest.mark.datafiles(
     os.path.join(FIXTURE_DIR, 'flow_field0.dat'),
+    os.path.join(FIXTURE_DIR, 'flow_field0.dat.gz'),
 )
 
 @FILES
@@ -62,3 +65,16 @@ def test_saving_flow_with_extra_fields_saves_required_fields_only(tmpdir):
     assert set(flow2.fields) < set(flow.fields)
     # `flow` is also calculated and added, but not saved
     assert set(flow2.fields) == set(required_fields + ['flow'])
+
+
+@FILES
+def test_saving_files_with_gz_extension_gzips_content(datafiles):
+    fn1 = datafiles / 'flow_field0.dat.gz'
+    fn2 = datafiles / 'flow_field1.dat.gz'
+
+    flow = gmx_flow.read_flow(fn1)
+    gmx_flow.write_flow(fn2, flow)
+
+    flow2 = gmx_flow.read_flow(fn2)
+
+    # assert np.array_equal(flow.data, flow2.data)

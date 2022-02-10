@@ -1,6 +1,7 @@
 import numpy as np
 from typing import BinaryIO
 
+from .utils import open_file_maybe_gzip
 from ..gmxflow import GmxFlow
 
 # Fields expected to be read in the files.
@@ -44,13 +45,18 @@ def write_flow(path: str, flow: GmxFlow):
 
     num_bins, packed_data = pack_data(data, flow.shape, keep_inds)
 
-    with open(path, "wb") as fp:
+    with open_file_maybe_gzip(path, mode='wb') as fp:
         _write_header(
-            fp, flow.shape, flow.spacing, flow.origin, flow.version.as_header(), num_bins
+            fp,
+            flow.shape,
+            flow.spacing,
+            flow.origin,
+            flow.version.as_header(),
+            num_bins,
         )
 
         for vs in packed_data:
-            vs.tofile(fp)
+            fp.write(vs.tobytes())
 
 
 def pack_data(data: np.ndarray,

@@ -1,10 +1,10 @@
 import gzip
 import numpy as np
-import os
 import warnings
 
 from collections.abc import Sequence
 
+from .utils import open_file_maybe_gzip
 from ..gmxflow import GmxFlow, GmxFlowVersion
 
 # Fields expected to be read in the files.
@@ -86,13 +86,7 @@ def _read_data(filename: str) -> tuple[dict[str, np.ndarray], dict[str, str]]:
     """
 
     def read_file(filename: str, mode: str) -> bytes:
-        _, ext = os.path.splitext(filename)
-        assume_gzip = ext == '.gz'
-
-        if assume_gzip:
-            fp = gzip.open(filename, mode)
-        else:
-            fp = open(filename, mode)
+        fp = open_file_maybe_gzip(filename, 'rb')
 
         try:
             content = fp.read()
