@@ -16,22 +16,27 @@ from gmx_flow.utils.argparse import add_common_range_args
 def get_files_from_range(args):
     """Yield files from a range along with the output destination."""
 
-    def get_filename(base, i):
-        return "{}{:05d}.{}".format(base, i, args.ext)
+    def get_filename(base, i, ext):
+        return "{}{:05d}.{}".format(base, i, ext)
 
     def get_output(i):
         if args.output != None:
             return args.output
         else:
-            return get_filename(args.outbase, i)
+            return get_filename(args.outbase, i, outext)
 
     if args.outbase == None and args.output == None:
         parser.error(
             'neither \'outbase\' or \'--output\' was specified for output')
 
+    if args.outext == None:
+        outext = args.ext
+    else:
+        outext = args.outext
+
     i = args.begin
     n = 1
-    fn = get_filename(args.base, i)
+    fn = get_filename(args.base, i, args.ext)
 
     filenames = []
 
@@ -45,7 +50,7 @@ def get_files_from_range(args):
             filenames = []
 
         i += 1
-        fn = get_filename(args.base, i)
+        fn = get_filename(args.base, i, args.ext)
 
     if args.num == None and filenames != []:
         yield filenames, get_output(n)
@@ -160,7 +165,12 @@ if __name__ == '__main__':
         type=int, default=None, metavar='INT',
         help='number of files to average over (default: all files in range)')
 
-    add_common_range_args(parser=None, use_group=parser_range, add_backup=True)
+    add_common_range_args(
+        parser=None,
+        use_group=parser_range,
+        add_backup=True,
+        add_outext=True,
+    )
 
     # set the function used to get the filenames depending on
     # which subparser is selected at runtime. there's probably

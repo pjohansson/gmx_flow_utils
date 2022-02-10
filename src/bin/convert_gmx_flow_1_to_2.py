@@ -59,7 +59,7 @@ if __name__ == '__main__':
         type=float, metavar='WIDTH',
         help="width of 2D system, used to compute the bin volume")
 
-    add_common_range_args(parser, add_backup=True)
+    add_common_range_args(parser, add_backup=True, add_outext=True)
 
     parser.add_argument(
         '-q', '--quiet',

@@ -1,5 +1,5 @@
 import numpy as np
-import os 
+import os
 import sys
 
 from gmx_flow.utils import get_files_from_range
@@ -8,7 +8,7 @@ def create_files_in_dir(dir, base, num, ext='dat', begin=1):
     base_path = os.path.join(dir, base)
 
     paths = [
-        "{}{:05}.{}".format(base, i + begin, ext) 
+        "{}{:05}.{}".format(base, i + begin, ext)
         for i in range(num)]
 
     for path in paths:
@@ -56,7 +56,7 @@ def test_get_range_with_end_smaller_than_begin_yields_no_files(tmpdir):
 
     generated_files = list(
         get_files_from_range(base_path, begin=5, end=4))
-    
+
     assert len(generated_files) == 0
 
 
@@ -112,16 +112,16 @@ def test_yield_output_files_can_have_different_extension(tmpdir):
     base = "flow_"
     output_base = "output_"
     ext = 'dat'
-    output_ext = 'xyz'
+    outext = 'xyz'
 
     base_path, _ = create_files_in_dir(tmpdir, base, num=10)
 
     generated_files = get_files_from_range(base_path, ext=ext,
-            output_base=output_base, output_ext=output_ext)
+            output_base=output_base, outext=outext)
 
     fn, fnout = next(generated_files)
     assert fn == "{}{:05d}.{}".format(base_path, 1, ext)
-    assert fnout == "{}{:05d}.{}".format(output_base, 1, output_ext)
+    assert fnout == "{}{:05d}.{}".format(output_base, 1, outext)
 
 
 def test_yield_existing_files_in_groups_along_with_paths_for_output(tmpdir):

@@ -35,7 +35,7 @@ def get_files_from_range(
     end: int | None = None,
     stride: int = 1,
     ext: str = 'dat',
-    output_ext: str | None = None,
+    outext: str | None = None,
     no_check: bool = False,
 ) -> Generator[GetRangePaths, None, None]:
     """Yield paths to existing files with given base paths.
@@ -77,7 +77,7 @@ def get_files_from_range(
 
     ext (str): Extension to yield files for.
 
-    output_ext (str): Extension to yield output files for (default is same as for `ext`).
+    outext (str): Extension to yield output files for (default is same as for `ext`).
 
     no_check (bool): Set to `True` to only create file names, not check for existance.
 
@@ -187,8 +187,8 @@ def get_files_from_range(
     if num_per_output == None:
         num_per_output = 1
 
-    if output_ext == None:
-        output_ext = ext
+    if outext == None:
+        outext = ext
 
     fns = [get_filename(base, i, ext) for base in fnbase]
     filename_group = []
@@ -198,14 +198,14 @@ def get_files_from_range(
             if output_base == None:
                 yield get_yielded_single_or_list(fns)
             else:
-                fnout = get_filename(output_base, i, output_ext)
+                fnout = get_filename(output_base, i, outext)
                 yield get_yielded_single_or_list(fns), fnout
 
         else:
             filename_group.append(get_yielded_single_or_list(fns))
 
             if len(filename_group) == num_per_output:
-                fnout = get_filename(output_base, index_output, output_ext)
+                fnout = get_filename(output_base, index_output, outext)
                 yield transpose_if_multiple_bases(filename_group, len(fnbase)), fnout
 
                 filename_group = []

@@ -30,7 +30,9 @@ def add_common_range_args(
     begin: int = 1,
     end: int | None = None,
     ext: str = 'dat',
+    outext: str | None = None,
     add_backup: bool = False,
+    add_outext: bool = False,
 ) -> _ArgumentGroup:
     """Add common keyword arguments for file range specification.
 
@@ -60,6 +62,12 @@ def add_common_range_args(
         '--ext',
         type=str, default=ext,
         help='extension for files (default: %(default)s)')
+
+    if add_outext:
+        parser_range.add_argument(
+            '--outext',
+            type=str, default=outext, metavar='EXT',
+            help='extension for output files (default: %(default)s)')
 
     if add_backup:
         parser_range.add_argument(
@@ -183,7 +191,7 @@ def add_common_graph_args(
 
 def get_common_range_kwargs(
     args: Namespace,
-    keys: Iterable[str] = ['begin', 'end', 'ext'],
+    keys: Iterable[str] = ['begin', 'end', 'ext', 'outext'],
     skip: Iterable[str] = [],
 ) -> dict[str, Any]:
     """Return common keyword arguments for file range specification from parsed arguments.
