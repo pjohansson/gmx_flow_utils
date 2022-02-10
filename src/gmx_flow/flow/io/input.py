@@ -1,6 +1,7 @@
 import gzip
 import numpy as np
 import os
+import warnings
 
 from collections.abc import Sequence
 
@@ -93,7 +94,21 @@ def _read_data(filename: str) -> tuple[dict[str, np.ndarray], dict[str, str]]:
         else:
             fp = open(filename, mode)
 
-        return fp.read()
+        try:
+            content = fp.read()
+        except gzip.BadGzipFile:
+            warnings.warn(
+                f"Tried to read `{filename}` as a gzip file "
+                "due to its extension, but it did not work: "
+                "reading it as a non-gzipped file instead"
+            )
+
+            fp = open(filename, mode)
+            content = fp.read()
+
+        fp.close()
+
+        return content
 
     def split_file_into_header_and_data(
             content: bytes,
