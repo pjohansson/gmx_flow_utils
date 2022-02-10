@@ -1,6 +1,7 @@
 # 0.3.1
 * Required Python version bumped to >=3.10
 * Type hinting added to modules
+* Added support for reading gzipped flow field files (files with `.gz` extension)
 * Various bugfixes
 
 # 0.3
