@@ -1,6 +1,4 @@
-import numpy as np
 import os
-import sys
 
 from gmx_flow.utils import get_files_from_range
 
