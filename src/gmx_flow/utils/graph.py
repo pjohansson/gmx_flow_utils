@@ -56,6 +56,7 @@ def decorate_graph(
         colorbar_axis_kwargs: Mapping[str, Any] = {},
         dpi: float = None,
         show: bool = True,
+        noclose: bool = False,
         save: str | None = None,
         tight_layout: bool = False,
         transparent: bool = False,
@@ -94,6 +95,12 @@ def decorate_graph(
 
         if show and (not use_ax):
             plt.show()
+
+        # If the figure is neither shown nor created by the caller,
+        # we destroy it after saving it to disk (disabled with `noclose`).
+        # This helps with batch creation of many figures.
+        if not (show or use_ax or noclose):
+            plt.close(fig)
 
         return fig, ax
 
