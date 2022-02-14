@@ -40,6 +40,32 @@ def decorate_graph(
     An already created `Axes` can be supplied with the `use_ax` keyword
     argument.
 
+    # Examples
+
+    Decorate a function that draws a line plot of input data:
+
+    ```
+    import numpy as np
+    from gmx_flow.utils.graph import decorate_graph
+
+    @decorate_graph
+    def draw_plot(ax, xs, ys, color='red', linestyle=None):
+        return ax.plot(xs, ys, color=color, linestyle=linestyle)
+
+    xs = np.linspace(0., 2. * np.pi)
+    ys = np.sin(xs)
+
+    draw_plot(xs, ys,
+              # These three kwargs are consumed by `decorate_graph`
+              xlabel='x', ylabel='sin(x)', save='sine.eps',
+              # This is not, so it's forwarded to the function as a kwarg
+              linestyle='dashed',
+              # This is neither consumed by `decorate_graph` nor used
+              # by the function, so an error will be yielded
+              # lineweight=3.0,
+    )
+    ```
+
     """
 
     def inner(
