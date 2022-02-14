@@ -18,7 +18,7 @@ PathsWithSingleOutput = tuple[Sequence[str], str]
 GetRangePaths = Path | PathWithOutput | Paths | PathsWithSingleOutput
 
 
-def get_files_or_range(input: str, **kwargs: Any) -> list[str]:
+def get_files_or_range(input: str, **kwargs: Any) -> list[GetRangePaths]:
     """If input is files, return as list, else return a range."""
 
     if os.path.exists(input):
