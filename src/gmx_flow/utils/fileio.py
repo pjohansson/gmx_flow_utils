@@ -386,6 +386,8 @@ def loop_items(items: Iterable[Item],
             if formatter != None:
                 fp.write(f"{formatter(item)} ")
 
+            fp.flush()
+
         yield item
 
     if not quiet:
