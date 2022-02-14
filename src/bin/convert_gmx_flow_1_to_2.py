@@ -8,7 +8,11 @@ from sys import stderr
 
 from gmx_flow import read_flow, write_flow, GmxFlowVersion
 from gmx_flow.flow import convert_gmx_flow_1_to_2
-from gmx_flow.utils import backup_file, get_files_from_range, loop_items
+from gmx_flow.utils import (
+    backup_file,
+    get_files_or_range,
+    loop_items,
+)
 from gmx_flow.utils.argparse import (
     add_common_range_args,
     get_common_range_kwargs,
@@ -72,7 +76,7 @@ if __name__ == '__main__':
     num_files = 0
     num_already_converted = 0
 
-    fn_tuples = get_files_from_range(
+    fn_tuples = get_files_or_range(
         args.base,
         output_base=args.output_base,
         **kwargs_range)

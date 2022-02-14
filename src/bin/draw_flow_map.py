@@ -4,16 +4,32 @@ import argparse
 import textwrap
 
 from argparse import ArgumentParser
+from turtle import color
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 
 from gmx_flow import read_flow, GmxFlow
 from gmx_flow.flow import supersample
-from gmx_flow.utils import decorate_graph
+from gmx_flow.utils import (
+    decorate_graph,
+    get_files_or_range,
+    loop_items,
+)
 from gmx_flow.utils.argparse import (
     add_common_graph_args,
+    add_common_range_args,
     get_common_graph_kwargs,
+    get_common_range_kwargs,
 )
+
+
+def print_item(item: str | tuple[str, str]) -> str:
+    try:
+        fn, fnout = item
+        return f"{fn} (saving as '{fnout}')"
+    except:
+        fn = item
+        return f"{fn}"
 
 
 @decorate_graph
@@ -57,7 +73,7 @@ if __name__ == '__main__':
 
             """),
         epilog=textwrap.dedent("""
-            Copyright Petter Johansson and contributors (2020-2021).
+            Copyright Petter Johansson and contributors (2020-2022).
 
             Distributed freely under the Blue Oak license
             (https://blueoakcouncil.org/license/1.0.0).
@@ -85,32 +101,47 @@ if __name__ == '__main__':
         '--supersample',
         default=1, type=int, metavar='N',
         help="supersample data by a given factor")
+    parser.add_argument(
+        '-q', '--quiet',
+        action='store_true',
+        help="be less loud and noisy")
 
     parser_graph = add_common_graph_args(parser, add_colormap=True)
+    parser_range = add_common_range_args(parser, outext='png', add_outext=True)
 
     args = parser.parse_args()
 
-    flow = read_flow(args.path)
+    kwargs_graph = get_common_graph_kwargs(args, axis='scaled')
+    kwargs_range = get_common_range_kwargs(args)
 
-    if args.supersample > 1:
-        flow = supersample(
-            flow,
-            args.supersample,
-            labels=[args.label, args.cutoff_label],
-        )
+    fns = get_files_or_range(args.path, output_base=args.save, **kwargs_range)
 
-    if args.cutoff != None:
-        flow.set_clim(args.cutoff, None, args.cutoff_label)
+    for item in loop_items(fns, formatter=print_item, quiet=args.quiet):
+        try:
+            fn, fnout = item
+            kwargs_graph.update({'save': fnout})
+        except Exception:
+            fn = item
 
-    kwargs_graph = get_common_graph_kwargs(
-        args,
-        axis='scaled',
-        colorbar_label=flow.units.get(args.label, None),
-    )
+        flow = read_flow(fn)
 
-    draw_flow(flow,
-              args.label,
-              colormap=args.colormap,
-              vlim=args.vlim,
-              **kwargs_graph,
-              )
+        if args.supersample > 1:
+            flow = supersample(
+                flow,
+                args.supersample,
+                labels=[args.label, args.cutoff_label],
+            )
+
+        if args.cutoff != None:
+            flow.set_clim(args.cutoff, None, args.cutoff_label)
+
+        if kwargs_graph.get('colorbar_label', None) == None:
+            kwargs_graph.update(
+                {'colorbar_label': flow.units.get(args.label, None)})
+
+        draw_flow(flow,
+                  args.label,
+                  colormap=args.colormap,
+                  vlim=args.vlim,
+                  **kwargs_graph,
+                  )
