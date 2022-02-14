@@ -2,6 +2,7 @@
 * Required Python version bumped to >=3.10
 * Type hinting added to modules
 * Added support for reading/writing gzipped flow field files (files with `.gz` extension)
+* Most scripts now work with both specified files and file ranges
 * Various bugfixes
 
 # 0.3
