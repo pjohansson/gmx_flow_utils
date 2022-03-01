@@ -84,6 +84,7 @@ def decorate_graph(
         show: bool = True,
         noclose: bool = False,
         save: str | None = None,
+        legend: bool = False,
         tight_layout: bool = False,
         transparent: bool = False,
         extra_kwargs: Mapping[str, Any] = {},
@@ -112,6 +113,9 @@ def decorate_graph(
 
         if colorbar:
             plt.colorbar(sm, label=colorbar_label, cax=cax)
+
+        if legend:
+            plt.legend()
 
         if tight_layout and (not use_ax):
             fig.tight_layout()
