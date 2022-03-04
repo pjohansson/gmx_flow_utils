@@ -1,8 +1,16 @@
 import numpy as np
+from typing import Sequence
+
 from gmx_flow import *
 
 
-def init_data_record(shape, spacing, data_fields=['M', 'U', 'V']):
+
+def init_data_record(shape: tuple[int, int], 
+                     spacing: tuple[float, float], 
+                     data_fields: Sequence[str] = ['M', 'U', 'V'],
+                     ) -> np.ndarray:
+    """Create a numpy array with coordinates and random data."""
+
     nx, ny = shape
     dx, dy = spacing
 
@@ -10,7 +18,7 @@ def init_data_record(shape, spacing, data_fields=['M', 'U', 'V']):
     y = dy * np.arange(ny)
     xs, ys = np.meshgrid(x, y, indexing='ij')
 
-    dtype = [(label, float) for label in ['X', 'Y'] + data_fields]
+    dtype = [(label, float) for label in ['X', 'Y'] + list(data_fields)]
     data = np.zeros((nx, ny), dtype=dtype)
 
     data['X'] = xs
@@ -85,6 +93,18 @@ def test_init_gmx_flow_sets_available_common_accessors():
     assert np.array_equal(flow.u, flow.data['U'])
     assert np.array_equal(flow.v, flow.data['V'])
     assert np.array_equal(flow.mass, flow.data['M'])
+
+
+def test_modifying_common_accessors_also_modifies_data_array():
+    shape = (10, 5)
+    spacing = (3., 5.)
+
+    data = init_data_record(shape=shape, spacing=spacing)
+    flow = GmxFlow(data, shape=shape, spacing=spacing)
+    
+    flow.x /= 2.
+    assert np.array_equal(flow.x, flow.data['X'])
+
 
 
 def test_init_gmx_flow_adds_flow_magnitude():
