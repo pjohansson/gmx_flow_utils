@@ -207,6 +207,10 @@ if __name__ == '__main__':
             flow_fields = [read_flow(fn) for fn in files]
             avg_flow = average_data(flow_fields)
 
+            if avg_flow == None:
+                print(f"error: could not average files {f(files, fnout)}")
+                exit(1)
+
             if args.backup:
                 backup_file(fnout)
 
