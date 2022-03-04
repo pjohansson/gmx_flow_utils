@@ -3,6 +3,7 @@
 * Type hinting added to modules
 * Added support for reading/writing gzipped flow field files (files with `.gz` extension)
 * Most scripts now work with both specified files and file ranges
+* Fixed bug where `average_data` did not correctly add velocities from the first flow field of the given set
 * Various bugfixes
 
 # 0.3
