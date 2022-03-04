@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from .gmxflow import GmxFlow
 
 
-def average_data(flow_fields: Sequence[GmxFlow]) -> GmxFlow:
+def average_data(flow_fields: Sequence[GmxFlow]) -> GmxFlow | None:
     """Average a given list of flow fields.
 
     The flow fields must be of identical shape and be regular. It is further
@@ -16,10 +16,14 @@ def average_data(flow_fields: Sequence[GmxFlow]) -> GmxFlow:
 
     """
 
-    try:
-        avg_flow = flow_fields[0].copy()
-    except IndexError:
+    if flow_fields == []:
         return None
+    elif len(flow_fields) == 1:
+        return flow_fields[0].copy()
+
+    avg_flow = flow_fields[0].copy()
+    avg_flow.data['U'] *= avg_flow.data['M']
+    avg_flow.data['V'] *= avg_flow.data['M']
 
     for flow in flow_fields[1:]:
         avg_flow.data['M'] += flow.data['M']
