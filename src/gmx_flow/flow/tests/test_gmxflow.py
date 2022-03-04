@@ -4,9 +4,8 @@ from typing import Sequence
 from gmx_flow import *
 
 
-
-def init_data_record(shape: tuple[int, int], 
-                     spacing: tuple[float, float], 
+def init_data_record(shape: tuple[int, int],
+                     spacing: tuple[float, float],
                      data_fields: Sequence[str] = ['M', 'U', 'V'],
                      ) -> np.ndarray:
     """Create a numpy array with coordinates and random data."""
@@ -101,10 +100,9 @@ def test_modifying_common_accessors_also_modifies_data_array():
 
     data = init_data_record(shape=shape, spacing=spacing)
     flow = GmxFlow(data, shape=shape, spacing=spacing)
-    
+
     flow.x /= 2.
     assert np.array_equal(flow.x, flow.data['X'])
-
 
 
 def test_init_gmx_flow_adds_flow_magnitude():
