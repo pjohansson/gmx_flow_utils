@@ -3,6 +3,7 @@
 *~
 
 # Data files
+tmp/
 *.dat
 
 # Byte-compiled / optimized / DLL files
