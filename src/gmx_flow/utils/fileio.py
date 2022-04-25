@@ -6,7 +6,7 @@ import sys
 
 from collections.abc import Callable, Generator, Iterable, Sequence
 from sys import stderr
-from typing import Any, TextIO, TypeVar
+from typing import TextIO, TypeVar
 
 # different return types from `get_files_from_range`
 Path = str
@@ -18,18 +18,83 @@ PathsWithSingleOutput = tuple[Sequence[str], str]
 GetRangePaths = Path | PathWithOutput | Paths | PathsWithSingleOutput
 
 
-def get_files_or_range(input: str, **kwargs: Any) -> list[GetRangePaths]:
-    """If input is files, return as list, else return a range."""
+def get_files_or_range(*input: str, **kwargs) -> list[str]:
+    """If input is a group of existing files, return as list, else return a range.
 
-    if os.path.exists(input):
-        output_base = kwargs.get('output_base', None)
+    This is a convenience function for 
 
-        if output_base != None:
-            return [(input, output_base)]
-        else:
-            return [input]
+    """
+
+    exists = [os.path.exists(path) for path in input]
+
+    if all(exists):  # also covers input == []
+        return list(input)
+    elif any(exists):
+        missing = input[not exists]
+        raise ValueError(
+            f"cannot determine whether input is files or range (missing: {missing})")
+    elif len(input) > 1:
+        raise ValueError(
+            f"no existing files found but input is more than 1 base, which is not supported")
     else:
-        return list(get_files_from_range(input, **kwargs))
+        return list(gen_file_range(input[0], **kwargs))
+
+
+def gen_file_range(
+    base: str,
+    begin: int = 1,
+    end: int | None = None,
+    stride: int = 1,
+    ext: str = 'dat',
+    check_exists: bool = True,
+) -> Generator[str, None, None]:
+    def get_path(base: str, i: int, ext: str):
+        return "{}{:05d}.{}".format(base, i, ext)
+
+    def validate_path(path: str):
+        if check_exists:
+            return os.path.exists(path)
+        else:
+            return True
+
+    def validate_index(i: int):
+        if end == None:
+            return True
+        else:
+            return i <= end
+
+    i = begin
+    path = get_path(base, i, ext)
+
+    while validate_path(path) and validate_index(i):
+        yield path
+
+        i += stride
+        path = get_path(base, i, ext)
+
+
+def gen_output_file_range(*args, **kwargs):
+    return gen_file_range(*args, **kwargs, check_exists=False)
+
+
+def gen_grouped_files(
+    path: str,
+    group_size: int | None,
+    **kwargs,
+) -> Generator[list[str], None, None]:
+    gen = gen_file_range(path, **kwargs)
+
+    match group_size:
+        case None:
+            yield list(gen)
+        case num if num >= 1:
+            chunk = list(itertools.islice(gen, num))
+            while len(chunk) == num:
+                yield chunk
+                chunk = list(itertools.islice(gen, num))
+        case _:
+            raise ValueError(
+                f"group_size must be at least 1 but was {group_size}")
 
 
 def get_files_from_range(
@@ -185,6 +250,14 @@ def get_files_from_range(
                     transposed_groups[i].append(fn)
 
             return transposed_groups
+
+    from warnings import warn
+    warn(
+        "`get_files_from_range` is deprecated in favor of "
+        "simpler to use and maintain `gen_file_range` and "
+        "`gen_grouped_files`, which have more narrow scopes",
+        category=DeprecationWarning,
+    )
 
     i = begin
     index_output = 1
