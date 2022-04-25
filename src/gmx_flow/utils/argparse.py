@@ -191,7 +191,7 @@ def add_common_graph_args(
 
 def get_common_range_kwargs(
     args: Namespace,
-    keys: Iterable[str] = ['begin', 'end', 'ext', 'outext'],
+    keys: Iterable[str] = ['begin', 'end', 'ext'],
     skip: Iterable[str] = [],
 ) -> dict[str, Any]:
     """Return common keyword arguments for file range specification from parsed arguments.
@@ -258,9 +258,9 @@ def _args_to_kwargs(args: Namespace,
 
     """
 
-    args = vars(args)
+    args_dict = vars(args)
 
     return {
-        k: v for k, v in args.items()
+        k: v for k, v in args_dict.items()
         if (k in keys) and (k not in skip)
     }

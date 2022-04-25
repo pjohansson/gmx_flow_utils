@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import itertools
 import numpy as np
 import textwrap
 
@@ -19,15 +20,15 @@ from gmx_flow.utils.argparse import (
     get_common_graph_kwargs,
     get_common_range_kwargs,
 )
+from gmx_flow.utils.fileio import gen_output_file_range
 
 
-def print_item(item: str | tuple[str, str]) -> str:
-    try:
-        fn, fnout = item
-        return f"{fn} (saving as '{fnout}')"
-    except:
-        fn = item
-        return f"{fn}"
+def print_item(item: tuple[str, str | None]) -> str:
+    match item:
+        case fn, None:
+            return f"{fn}"
+        case fn, fnout:
+            return f"{fn} (saving as '{fnout}')"
 
 
 @decorate_graph
@@ -128,16 +129,19 @@ if __name__ == '__main__':
 
     kwargs_graph = get_common_graph_kwargs(args, axis='scaled')
     kwargs_range = get_common_range_kwargs(args)
+    kwargs_range_output = kwargs_range | {'ext': args.outext}
 
-    fns = get_files_or_range(args.path, output_base=args.save, **kwargs_range)
+    fns = get_files_or_range(args.path, **kwargs_range)
 
-    for item in loop_items(fns, formatter=print_item, quiet=args.quiet):
-        try:
-            fn, fnout = item
-            kwargs_graph.update({'save': fnout})
-        except:
-            fn = item
+    if len(fns) == 1 or args.save == None:
+        fn_tuples = zip(fns, itertools.repeat(args.save))
+    else:
+        fn_tuples = zip(
+            fns,
+            gen_output_file_range(args.save, **kwargs_range_output)
+        )
 
+    for fn, fnout in loop_items(fn_tuples, formatter=print_item, quiet=args.quiet):
         flow = read_flow(fn)
         flow.set_xlim(*args.xlim)
         flow.set_ylim(*args.ylim)
@@ -145,6 +149,7 @@ if __name__ == '__main__':
         if args.cutoff != None:
             flow.set_clim(args.cutoff, None, args.cutoff_label)
 
+        kwargs_graph.update({'save': fnout})
         if kwargs_graph.get('colorbar_label', None) == None:
             kwargs_graph.update(
                 {'colorbar_label': flow.units.get(args.color_label, None)})

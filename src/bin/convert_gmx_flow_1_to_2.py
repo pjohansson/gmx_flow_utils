@@ -10,16 +10,16 @@ from gmx_flow import read_flow, write_flow, GmxFlowVersion
 from gmx_flow.flow import convert_gmx_flow_1_to_2
 from gmx_flow.utils import (
     backup_file,
-    get_files_or_range,
     loop_items,
 )
 from gmx_flow.utils.argparse import (
     add_common_range_args,
     get_common_range_kwargs,
 )
+from gmx_flow.utils.fileio import gen_file_range, gen_output_file_range
 
 
-def print_item(fn_tuple: tuple[str, str]) -> str:
+def formatter(fn_tuple: tuple[str, str]) -> str:
     fn, fnout = fn_tuple
     return f"{fn} -> {fnout} "
 
@@ -71,25 +71,29 @@ if __name__ == '__main__':
         help="be less loud and noisy")
 
     args = parser.parse_args()
+
     kwargs_range = get_common_range_kwargs(args)
+    kwargs_range_output = kwargs_range | {'ext': args.outext}
 
     num_files = 0
-    num_already_converted = 0
+    num_previously_converted = 0
 
-    fn_tuples = get_files_or_range(
-        args.base,
-        output_base=args.output_base,
-        **kwargs_range)
+    fn_tuples = zip(
+        gen_file_range(args.base, **kwargs_range),
+        gen_output_file_range(args.output_base, **kwargs_range_output)
+    )
 
-    for fn, fnout in loop_items(fn_tuples,
-                                quiet=args.quiet,
-                                formatter=print_item):
+    for fn, fnout in loop_items(
+        fn_tuples,
+        quiet=args.quiet,
+        formatter=formatter,
+    ):
         flow = read_flow(fn)
 
         if flow.version == GmxFlowVersion(1):
             flow = convert_gmx_flow_1_to_2(flow, args.width)
         else:
-            num_already_converted += 1
+            num_previously_converted += 1
 
         if args.backup:
             backup_file(fnout)
@@ -99,11 +103,13 @@ if __name__ == '__main__':
         num_files += 1
 
     if (num_files == 0) and (not args.quiet):
-        stderr.write("warning: no files matching `{}{:05}.{}`, ... found\n".format(
-            args.base, args.begin, args.ext
-        ))
+        stderr.write(
+            f"warning: no files matching "
+            f"`{args.base}{args.begin:05}.{args.ext}`, ... found"
+        )
 
-    if (num_already_converted > 0) and (not args.quiet):
-        stderr.write("note: {}/{} files were already in the `{}` format\n".format(
-            num_already_converted, num_files, 'GMX_FLOW_2',
-        ))
+    if (num_previously_converted > 0) and (not args.quiet):
+        stderr.write(
+            f"note: {num_previously_converted}/{num_files} files "
+            f"were already in the `GMX_FLOW_2` format\n"
+        )

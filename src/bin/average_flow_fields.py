@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 import textwrap
 
 from argparse import ArgumentParser
@@ -10,73 +9,26 @@ from collections.abc import Callable, Sequence
 from gmx_flow import read_flow, write_flow
 from gmx_flow.flow import average_data
 from gmx_flow.utils import backup_file, loop_items
-from gmx_flow.utils.argparse import add_common_range_args
+from gmx_flow.utils.argparse import add_common_range_args, get_common_range_kwargs
+from gmx_flow.utils.fileio import gen_output_file_range, gen_grouped_files
 
 
-def get_files_from_range(args):
-    """Yield files from a range along with the output destination."""
-
-    def get_filename(base, i, ext):
-        return "{}{:05d}.{}".format(base, i, ext)
-
-    def get_output(i):
-        if args.output != None:
-            return args.output
-        else:
-            return get_filename(args.outbase, i, outext)
-
-    if args.outbase == None and args.output == None:
-        parser.error(
-            'neither \'outbase\' or \'--output\' was specified for output')
-
-    if args.outext == None:
-        outext = args.ext
-    else:
-        outext = args.outext
-
-    i = args.begin
-    n = 1
-    fn = get_filename(args.base, i, args.ext)
-
-    filenames = []
-
-    while os.path.exists(fn) and (args.end == None or i <= args.end):
-        filenames.append(fn)
-
-        if args.num != None and len(filenames) == args.num:
-            yield filenames, get_output(n)
-
-            n += 1
-            filenames = []
-
-        i += 1
-        fn = get_filename(args.base, i, args.ext)
-
-    if args.num == None and filenames != []:
-        yield filenames, get_output(n)
-
-
-def get_files_from_list(args):
-    """Yield the list of given files and the output."""
-
-    yield args.files, args.output
-
-
-def get_formatter(verbose: bool) -> Callable[[Sequence[str], str], str]:
+def get_formatter(verbose: bool) -> Callable[[tuple[Sequence[str], str]], str]:
     def inner(input: tuple[Sequence[str], str]) -> str:
-        files, fnout = input
+        match input:
+            case [], fnout:
+                return f"[] -> {fnout}"
+            case [fn], fnout:
+                return f"['{fn}'] -> '{fnout}'"
+            case [fn1, fn2], fnout:
+                return f"['{fn1}, {fn2}'] -> '{fnout}'"
+            case files, fnout:
+                if verbose:
+                    file_list = ', '.join(files)
+                else:
+                    file_list = "'{}', ..., '{}'".format(files[0], files[-1])
 
-        if len(files) == 1:
-            return f"['{files[0]}'] -> '{fnout}'"
-        elif len(files) == 2:
-            return f"['{files[0]}', '{files[1]}'] -> '{fnout}'"
-        elif len(files) > 2:
-            if verbose:
-                file_list = ', '.join(files)
-            else:
-                file_list = "'{}', ..., '{}'".format(files[0], files[-1])
-
-            return f"[{file_list}] -> '{fnout}'"
+                return f"[{file_list}] -> '{fnout}'"
 
     return inner
 
@@ -86,45 +38,7 @@ if __name__ == '__main__':
         description=textwrap.dedent("""
             Average flow field files.
 
-            All flow fields must have the same grid shape
-            and are also assumed to share origin and bin sizes.
-            They should the in the `GMX_FLOW` file format,
-            supported by the `gmx_flow` module.
-            """),
-        epilog=textwrap.dedent("""
-            Copyright Petter Johansson and contributors (2020).
-
-            Distributed freely under the Blue Oak license
-            (https://blueoakcouncil.org/license/1.0.0).
-            """),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-
-    subparsers = parser.add_subparsers(
-        dest='subcommand', required=True,
-        title='subcommands',
-        description='Sub-commands for input file selection.')
-
-    parser_files = subparsers.add_parser(
-        'files',
-        description="Average a given set of flow field files.",
-        help='average a list of flow field files',
-    )
-    parser_files.add_argument(
-        'files', type=str, nargs='+',
-        help='list of flow field files to average',
-    )
-    parser_files.add_argument(
-        'output', type=str,
-        help='file to write average into',
-    )
-
-    parser_range = subparsers.add_parser(
-        'range',
-        description=textwrap.dedent("""
-            Average a sequential range of flow field files.
-
-            Files are assumed to have paths of the format '{}{:05d}.dat',
+            Files for a given range are assumed to have paths of the format '{}{:05d}.dat',
             i.e. 'flow_00001.dat', 'flow_00002.dat', etc. The script looks for all matching
             files in this format, starting from the numerical index 1 (can be changed
             with the '-b' flag) until no more can be found (or until an optional maximum
@@ -142,76 +56,96 @@ if __name__ == '__main__':
                 ['flow_00006.dat', 'flow_00007.dat', ..., 'flow_00010.dat'] -> 'avg_00002.dat'
                 ['flow_00011.dat', 'flow_00015.dat', ..., 'flow_00015.dat'] -> 'avg_00003.dat'
                 ['flow_00016.dat', 'flow_00020.dat', ..., 'flow_00020.dat'] -> 'avg_00004.dat'
+
+            All flow fields must have the same grid shape and are assumed to share origin 
+            and bin sizes. They should the in the `GMX_FLOW` file format, supported by the 
+            `gmx_flow` module.
             """),
-        help=r"average a sequential list "
-             r"('flow_00001.dat', 'flow_00002.dat', ...)",
+        epilog=textwrap.dedent("""
+            Copyright Petter Johansson and contributors (2020).
+
+            Distributed freely under the Blue Oak license
+            (https://blueoakcouncil.org/license/1.0.0).
+            """),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser_range.add_argument(
+    parser.add_argument(
         'base',
-        type=str,
+        type=str, nargs='?', 
         help='base of input files')
-    parser_range.add_argument(
+    parser.add_argument(
         'outbase',
-        type=str, nargs='?',
+        type=str, nargs='?', 
         help='base of output files (unless \'-o\' is supplied)')
-    parser_range.add_argument(
+    parser.add_argument(
+        '-f', '--files', 
+        nargs='+', metavar='PATH', default=None,
+        help="list of files to average and write to `--output`")
+    parser.add_argument(
         '-o', '--output',
         type=str, default=None, metavar='PATH',
         help='write the averaged data into this file (replaces \'outbase\')')
-    parser_range.add_argument(
+    parser.add_argument(
         '-n', '--num',
         type=int, default=None, metavar='INT',
         help='number of files to average over (default: all files in range)')
 
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='print averaged file information')
+    parser.add_argument(
+        '-q', '--quiet',
+        action='store_true',
+        help='do not print anything')
+
     add_common_range_args(
-        parser=None,
-        use_group=parser_range,
+        parser,
         add_backup=True,
         add_outext=True,
     )
 
-    # set the function used to get the filenames depending on
-    # which subparser is selected at runtime. there's probably
-    # a better way to check for this. TODO: find it
-    parser_files.set_defaults(get_filenames=get_files_from_list)
-    parser_range.set_defaults(get_filenames=get_files_from_range)
-
-    parser_files.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='print averaged file information')
-    parser_files.add_argument(
-        '-q', '--quiet',
-        action='store_true',
-        help='do not print anything')
-    parser_range.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='print averaged file information')
-    parser_range.add_argument(
-        '-q', '--quiet',
-        action='store_true',
-        help='do not print anything')
-
     args = parser.parse_args()
+
+    kwargs_range = get_common_range_kwargs(args)
+    kwargs_range_output = kwargs_range | {'ext': args.outext}
 
     f = get_formatter(args.verbose)
 
-    # see above comment
-    fns_generator = args.get_filenames(args)
+    try:
+        match args.base, args.outbase, args.files, args.output:
+            case None, _, None, _:
+                raise ValueError("no files where specified with `base` or `--files`")
+            case str(_), None, _, _:
+                raise ValueError("missing base for output files (`outbase`)")
+            case str(base), str(outbase), _, _:
+                fns = list(zip(
+                    gen_grouped_files(base, args.num, **kwargs_range),
+                    gen_output_file_range(outbase, **kwargs_range_output)
+                ))
+            case _, _, [*files], str(fnout):
+                fns = [(files, fnout)]
+            case _, _, _, None:
+                raise ValueError("no output file specified with `--output`")
+            case _:
+                raise ValueError("no files where specified with `base` or `--files`")
+    except ValueError as exc:
+        print(f"error: {exc}")
+        exit(1)
 
-    for files, fnout in loop_items(fns_generator, formatter=f, quiet=args.quiet):
-        if files != []:
-            flow_fields = [read_flow(fn) for fn in files]
-            avg_flow = average_data(flow_fields)
+    for files, fnout in loop_items(fns, formatter=f, quiet=args.quiet):
+        if files == []:
+            continue 
 
-            if avg_flow == None:
-                print(f"error: could not average files {f(files, fnout)}")
-                exit(1)
+        flow_fields = [read_flow(fn) for fn in files]
+        avg_flow = average_data(flow_fields)
 
-            if args.backup:
-                backup_file(fnout)
+        if avg_flow == None:
+            print(f"error: could not average files {f((files, fnout))}")
+            exit(1)
 
-            write_flow(fnout, avg_flow)
+        if args.backup:
+            backup_file(fnout)
+
+        write_flow(fnout, avg_flow)
