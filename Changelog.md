@@ -1,3 +1,10 @@
+# 0.4
+* Breaking changes: 
+* * `average_flow_fields.py` now has no subparsers
+* * `get_files_or_range` has a different function signature
+*
+* `get_file_range` is deprecated in favor of `gen_file_range` and `gen_grouped_files`
+
 # 0.3.1
 * Required Python version bumped to >=3.10
 * Type hinting added to modules

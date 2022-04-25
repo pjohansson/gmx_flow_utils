@@ -1,7 +1,6 @@
 import io
-import itertools
 
-from gmx_flow.utils.fileio import loop_items
+from gmx_flow.utils.fileio import gen_file_range, gen_grouped_files, loop_items
 
 
 def test_loop_items_yields_from_lists():
@@ -69,3 +68,29 @@ def test_loop_items_caps_at_500k_items():
 
     assert len(yielded) == num_max
     assert yielded == items[:num_max]
+
+
+def test_zipping_gen_file_ranges_works_with_loop_items():
+    base0 = 'test0'
+    base1 = 'test1'
+    baselist = 'test2'
+    ext = 'dat'
+
+    generators = [
+        gen_file_range(base0, check_exists=False),
+        gen_file_range(base1, check_exists=False),
+        gen_grouped_files(baselist, 3, check_exists=False),
+    ]
+
+    yielded = list(loop_items(zip(*generators, range(10))))
+    
+    fn0, fn1, list0, _ = yielded[0]
+    assert fn0 == f"{base0}{1:05d}.{ext}"
+    assert fn1 == f"{base1}{1:05d}.{ext}"
+    assert list0 == [f"{baselist}{i:05d}.{ext}" for i in range(1, 4)]
+
+    fn0, fn1, list0, _ = yielded[1]
+    assert fn0 == f"{base0}{2:05d}.{ext}"
+    assert fn1 == f"{base1}{2:05d}.{ext}"
+    assert list0 == [f"{baselist}{i:05d}.{ext}" for i in range(4, 7)]
+
