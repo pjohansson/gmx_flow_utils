@@ -1,7 +1,7 @@
 """Utilities for working with `ArgumentParser` parsers."""
 
 from argparse import ArgumentParser, _ArgumentGroup, Namespace
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import Any, TypeVar
 
 # From what I understand this is the only way to declare a generic `type` variable
@@ -29,7 +29,7 @@ def add_common_range_args(
     use_group: _ArgumentGroup | None = None,
     begin: int = 1,
     end: int | None = None,
-    ext: str = 'dat',
+    ext: str | Sequence[str] = ['dat.gz', 'dat'],
     outext: str | None = None,
     add_backup: bool = False,
     add_outext: bool = False,
