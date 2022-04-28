@@ -45,7 +45,7 @@ def gen_file_range(
     begin: int = 1,
     end: int | None = None,
     stride: int = 1,
-    ext: str = 'dat',
+    ext: str | Sequence[str] = 'dat',
     check_exists: bool = True,
 ) -> Generator[str, None, None]:
     def get_path(base: str, i: int, ext: str):
@@ -62,15 +62,38 @@ def gen_file_range(
             return True
         else:
             return i <= end
+    
+    def find_first_valid_ext(extensions: Sequence[str]) -> str | None:
+        for ext in extensions:
+            if validate_path(get_path(base, begin, ext)):
+                return ext
+        
+        return None
+    
+    match ext:
+        case str(ext1):
+            pass
+        case []:
+            return
+        case [ext1]:
+            pass
+        case [*extensions] if check_exists:
+            match find_first_valid_ext(extensions):
+                case None:
+                    return 
+                case ext1:
+                    pass
+        case _:
+            ext1 = ext[0]
 
     i = begin
-    path = get_path(base, i, ext)
+    path = get_path(base, i, ext1)
 
     while validate_path(path) and validate_index(i):
         yield path
 
         i += stride
-        path = get_path(base, i, ext)
+        path = get_path(base, i, ext1)
 
 
 def gen_output_file_range(*args, **kwargs):
