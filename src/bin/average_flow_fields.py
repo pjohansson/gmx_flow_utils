@@ -109,7 +109,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     kwargs_range = get_common_range_kwargs(args)
-    kwargs_range_output = kwargs_range | {'ext': args.outext}
+
+    if args.outext == None:
+        kwargs_range_output = kwargs_range.copy()
+    else:
+        kwargs_range_output = kwargs_range | {'ext': args.outext}
 
     f = get_formatter(args.verbose)
 

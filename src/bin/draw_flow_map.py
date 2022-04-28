@@ -2,6 +2,7 @@
 
 import argparse
 import itertools
+import os
 import textwrap
 
 from argparse import ArgumentParser
@@ -113,7 +114,11 @@ if __name__ == '__main__':
 
     kwargs_graph = get_common_graph_kwargs(args, axis='scaled')
     kwargs_range = get_common_range_kwargs(args)
-    kwargs_range_output = kwargs_range | {'ext': args.outext}
+
+    if args.outext == None:
+        kwargs_range_output = kwargs_range.copy()
+    else:
+        kwargs_range_output = kwargs_range | {'ext': args.outext}
 
     fns = get_files_or_range(args.path, **kwargs_range)
 
