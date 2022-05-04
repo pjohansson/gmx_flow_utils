@@ -4,6 +4,7 @@
 * * `get_files_or_range` has a different function signature
 *
 * `get_file_range` is deprecated in favor of `gen_file_range` and `gen_grouped_files`
+* Add `track_center_of_mass.py` script
 
 # 0.3.1
 * Required Python version bumped to >=3.10
