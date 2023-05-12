@@ -127,22 +127,22 @@ class GmxFlow:
     # Field accessors
     # Will be set to record fields in the `data` array during initialization
     # or by calling `self._update_field_accessors()`
-    x: np.ndarray = field(default=np.array([]), repr=False)
+    x: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
     "Center positions of each bin along the `x` axis"
 
-    y: np.ndarray = field(default=np.array([]), repr=False)
+    y: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
     "Center positions of each bin along the `y` axis"
 
-    u: np.ndarray = field(default=np.array([]), repr=False)
+    u: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
     "Mass flow of each bin along the `x` axis"
 
-    v: np.ndarray = field(default=np.array([]), repr=False)
+    v: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
     "Mass flow of each bin along the `y` axis"
 
-    flow: np.ndarray = field(default=np.array([]), repr=False)
+    flow: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
     "Flow magnitude in each bin (sqrt(u**2 + v**2))"
 
-    mass: np.ndarray = field(default=np.array([]), repr=False)
+    mass: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
     "Mass density (or total mass for `GMX_FLOW_1`) of each bin"
 
     # Background data and consts
