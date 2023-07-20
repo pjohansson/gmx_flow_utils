@@ -88,7 +88,7 @@ if __name__ == '__main__':
         help="path to flow field data file")
     parser.add_argument(
         '-l', '--label',
-        default='M', choices=['M', 'U', 'V', 'flow', 'T'],
+        default='M', choices=['M', 'U', 'V', 'N', 'flow', 'T'],
         help='data label to draw')
     parser.add_argument(
         '-c', '--cutoff',
