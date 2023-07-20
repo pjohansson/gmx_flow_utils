@@ -109,4 +109,8 @@ if __name__ == '__main__':
         **kwargs_graph,
     )
     plt.tight_layout(pad=1.15, h_pad=0.2)
+
+    if kwargs_graph['save'] != None:
+        plt.savefig(kwargs_graph['save'], transparent=kwargs_graph['transparent'])
+
     plt.show()
