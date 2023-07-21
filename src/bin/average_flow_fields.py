@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
+import numpy as np
 import textwrap
 
 from argparse import ArgumentParser
 from collections.abc import Callable, Sequence
 
-from gmx_flow import read_flow, write_flow
+from gmx_flow import read_flow, write_flow, GmxFlow
 from gmx_flow.flow import average_data
 from gmx_flow.utils import backup_file, loop_items
 from gmx_flow.utils.argparse import add_common_range_args, get_common_range_kwargs
@@ -31,6 +32,15 @@ def get_formatter(verbose: bool) -> Callable[[tuple[Sequence[str], str]], str]:
                 return f"[{file_list}] -> '{fnout}'"
 
     return inner
+
+
+def calc_center_of_mass(flow: GmxFlow) -> tuple[float, float]:
+    total_mass = np.sum(flow.mass)
+
+    xcom = np.sum(flow.x * flow.mass) / total_mass
+    ycom = np.sum(flow.y * flow.mass) / total_mass
+
+    return xcom, ycom
 
 
 if __name__ == '__main__':
@@ -90,6 +100,10 @@ if __name__ == '__main__':
         '-n', '--num',
         type=int, default=None, metavar='INT',
         help='number of files to average over (default: all files in range)')
+    parser.add_argument(
+        '--remove-comm',
+        action='store_true',
+        help='remove center of mass motion from trajectory before averaging')
 
     parser.add_argument(
         '-v', '--verbose',
@@ -138,11 +152,34 @@ if __name__ == '__main__':
         print(f"error: {exc}")
         exit(1)
 
+    comm = []
+
     for files, fnout in loop_items(fns, formatter=f, quiet=args.quiet):
         if files == []:
             continue
 
         flow_fields = [read_flow(fn) for fn in files]
+
+        if args.remove_comm:
+            comm = [calc_center_of_mass(flow) for flow in flow_fields]
+            x0, y0 = comm[0]
+            comm_relative = [(x - x0, y - y0) for x, y in comm]
+
+            for i, (flow, (dx, dy)) in enumerate(zip(flow_fields, comm_relative)):
+                # We here assume that we have a regular grid that we can simply translate
+                spacing_x, spacing_y = flow.spacing
+                shift_x = int(np.round(dx / spacing_x))
+                shift_y = int(np.round(dy / spacing_y))
+
+                flow.data = np.roll(flow.data, -shift_x, axis=0)
+                flow.data = np.roll(flow.data, -shift_y, axis=1)
+
+                flow.x -= spacing_x * float(shift_x)
+                flow.y -= spacing_y * float(shift_y)
+
+                flow.u -= np.mean(flow.u)
+                flow.v -= np.mean(flow.v)
+
         avg_flow = average_data(flow_fields)
 
         if avg_flow == None:

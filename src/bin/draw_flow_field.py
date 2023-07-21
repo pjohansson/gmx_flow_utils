@@ -99,6 +99,10 @@ if __name__ == '__main__':
         default='M', choices=['M', 'U', 'V', 'flow', 'T'],
         help="data label to use with `--cutoff` (default: %(default)s)")
     parser.add_argument(
+        '--subtract-mean',
+        action='store_true',
+        help='subtract mass-averaged velocity from velocity field')
+    parser.add_argument(
         '-q', '--quiet',
         action='store_true',
         help="be less loud and noisy")
@@ -152,6 +156,11 @@ if __name__ == '__main__':
 
         if args.cutoff != None:
             flow.set_clim(args.cutoff, None, args.cutoff_label)
+
+        if args.subtract_mean:
+            total_mass = np.sum(flow.mass)
+            flow.u -= np.sum(flow.u * flow.mass) / total_mass
+            flow.v -= np.sum(flow.v * flow.mass) / total_mass
 
         kwargs_graph.update({'save': fnout})
         if kwargs_graph.get('colorbar_label', None) == None:
