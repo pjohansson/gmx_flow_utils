@@ -57,8 +57,8 @@ if __name__ == '__main__':
                 ['flow_00011.dat', 'flow_00015.dat', ..., 'flow_00015.dat'] -> 'avg_00003.dat'
                 ['flow_00016.dat', 'flow_00020.dat', ..., 'flow_00020.dat'] -> 'avg_00004.dat'
 
-            All flow fields must have the same grid shape and are assumed to share origin 
-            and bin sizes. They should the in the `GMX_FLOW` file format, supported by the 
+            All flow fields must have the same grid shape and are assumed to share origin
+            and bin sizes. They should the in the `GMX_FLOW` file format, supported by the
             `gmx_flow` module.
             """),
         epilog=textwrap.dedent("""
@@ -72,14 +72,14 @@ if __name__ == '__main__':
 
     parser.add_argument(
         'base',
-        type=str, nargs='?', 
+        type=str, nargs='?',
         help='base of input files')
     parser.add_argument(
         'outbase',
-        type=str, nargs='?', 
+        type=str, nargs='?',
         help='base of output files (unless \'-o\' is supplied)')
     parser.add_argument(
-        '-f', '--files', 
+        '-f', '--files',
         nargs='+', metavar='PATH', default=None,
         help="list of files to average and write to `--output`")
     parser.add_argument(
@@ -140,7 +140,7 @@ if __name__ == '__main__':
 
     for files, fnout in loop_items(fns, formatter=f, quiet=args.quiet):
         if files == []:
-            continue 
+            continue
 
         flow_fields = [read_flow(fn) for fn in files]
         avg_flow = average_data(flow_fields)
