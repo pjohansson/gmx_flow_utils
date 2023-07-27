@@ -32,8 +32,10 @@ def add_common_range_args(
     ext: str | Sequence[str] = ['dat.gz', 'dat'],
     dt: float = 1.,
     outext: str | None = None,
+    outbegin: int = 1,
     add_backup: bool = False,
     add_outext: bool = False,
+    add_outbegin: bool = False,
     add_time: bool = False,
 ) -> _ArgumentGroup:
     """Add common keyword arguments for file range specification.
@@ -64,7 +66,7 @@ def add_common_range_args(
         '--ext',
         type=str, default=ext,
         help='extension for files (default: %(default)s)')
-    
+
     if add_time:
         parser_range.add_argument(
             '--dt',
@@ -77,6 +79,13 @@ def add_common_range_args(
             '--outext',
             type=str, default=outext, metavar='EXT',
             help='extension for output files (default: %(default)s)')
+
+    if add_outbegin:
+        parser_range.add_argument(
+            '--out-begin',
+            type=int, default=outbegin, metavar='INT',
+            help="index of first output file (default: %(default)s)",
+        )
 
     if add_backup:
         parser_range.add_argument(
