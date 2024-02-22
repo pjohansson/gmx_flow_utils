@@ -123,12 +123,14 @@ if __name__ == '__main__':
     )
     parser_cutoff.add_argument(
         '--use-xlim',
-        nargs=2, default=(None, None), type=parse_float_or_none,
+        nargs=2, default=(None, None), metavar=('X0', 'X1'),
+        type=parse_float_or_none,
         help="limit calculation area along the x axis",
     )
     parser_cutoff.add_argument(
         '--use-ylim',
-        nargs=2, default=(None, None), type=parse_float_or_none,
+        nargs=2, default=(None, None), metavar=('Y0', 'Y1'),
+        type=parse_float_or_none,
         help="limit calculation area along the y axis",
     )
 
