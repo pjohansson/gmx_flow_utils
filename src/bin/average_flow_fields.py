@@ -177,9 +177,6 @@ if __name__ == '__main__':
                 flow.x -= spacing_x * float(shift_x)
                 flow.y -= spacing_y * float(shift_y)
 
-                flow.u -= np.mean(flow.u)
-                flow.v -= np.mean(flow.v)
-
         avg_flow = average_data(flow_fields)
 
         if avg_flow == None:
