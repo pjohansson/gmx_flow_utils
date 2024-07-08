@@ -140,8 +140,8 @@ if __name__ == '__main__':
                 labels=[args.label, args.cutoff_label],
             )
 
-        if args.cutoff != None:
-            flow.set_clim(args.cutoff, None, args.cutoff_label)
+        if args.cutoff is not None:
+            flow.set_clim_value(args.cutoff, None, args.cutoff_label, 0.)
 
         kwargs_graph.update({'save': fnout})
         if kwargs_graph.get('colorbar_label', None) == None:
