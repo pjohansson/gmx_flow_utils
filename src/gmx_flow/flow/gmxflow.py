@@ -127,22 +127,22 @@ class GmxFlow:
     # Field accessors
     # Will be set to record fields in the `data` array during initialization
     # or by calling `self._update_field_accessors()`
-    x: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
+    x: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     "Center positions of each bin along the `x` axis"
 
-    y: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
+    y: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     "Center positions of each bin along the `y` axis"
 
-    u: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
+    u: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     "Mass flow of each bin along the `x` axis"
 
-    v: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
+    v: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     "Mass flow of each bin along the `y` axis"
 
-    flow: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
+    flow: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     "Flow magnitude in each bin (sqrt(u**2 + v**2))"
 
-    mass: np.ndarray = field(default_factory=lambda : np.array([]), repr=False)
+    mass: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     "Mass density (or total mass for `GMX_FLOW_1`) of each bin"
 
     # Background data and consts
@@ -193,15 +193,38 @@ class GmxFlow:
 
         """
 
-        if cmin == None:
+        if cmin is None:
             cmin = -np.inf
 
-        if cmax == None:
+        if cmax is None:
             cmax = np.inf
 
         mask = (self.data[label] >= cmin) & (self.data[label] <= cmax)
         self.data = self.data[mask]
         self._update_shape()
+
+    def set_clim_value(
+        self,
+        cmin: float | None,
+        cmax: float | None,
+        label: str,
+        value: float,
+    ):
+        """Set bin values outside of given limits to a given value.
+
+        """
+
+        if cmin is None:
+            cmin = -np.inf
+
+        if cmax is None:
+            cmax = np.inf
+
+        mask = (self.data[label] < cmin) | (self.data[label] > cmax)
+
+        for label in self.fields:
+            if label not in [self._xlabel, self._ylabel]:
+                self.data[label][mask] = value
 
     def copy(self) -> 'GmxFlow':
         """Return a deep copy of the object."""
